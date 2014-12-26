@@ -28,7 +28,7 @@
     "minijasminenode2": "^1.0.0"
   },
   "scripts": {
-    "lint": "node_modules/.bin/jshint --reporter=node_modules/jshint-stylish/stylish.js --verbose index.js bin/tomasi",
+    "lint": "node_modules/.bin/jshint --reporter=node_modules/jshint-stylish/stylish.js --verbose index.js test/*.spec.js bin/tomasi",
     "test": "rm -rf coverage && node_modules/.bin/istanbul cover -- node_modules/.bin/minijasminenode2 test/*.spec.js --verbose",
     "build": "npm run lint && npm test"
   },
