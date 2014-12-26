@@ -29,21 +29,19 @@ describe('tomasi(config, cb)', function() {
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
       cb();
     });
-    var config = { // `inDir` defaults to `./in/`
-      dataTypes: {
-        'blog': {
-          in: '*.txt',
-          out: {
-            'single': [
-              [ plugin ],
-            ]
-          }
+    var config = {
+      'blog': {
+        in: 'invalid/*.txt',
+        out: {
+          'single': [
+            [ plugin ],
+          ]
         }
       }
     };
-    expect(fs.existsSync('./in/')).toBe(false);
+    expect(fs.existsSync('./invalid/')).toBe(false);
     tomasi(config, function(err) {
-      expect(err).toBe('no files match the pattern in/*.txt');
+      expect(err).toBe('no files match the pattern invalid/*.txt');
       done();
     });
   });

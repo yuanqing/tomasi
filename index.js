@@ -7,10 +7,6 @@ var glob = require('glob');
 var isUtf8 = require('is-utf8');
 var path = require('path');
 
-var isObject = function(obj) {
-  return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
-};
-
 var tomasi = function(config, cb) {
   if (!isObject(config)) {
     throw 'missing config';
@@ -18,10 +14,11 @@ var tomasi = function(config, cb) {
   if (typeof cb !== 'function') {
     throw 'missing callback';
   }
-  config.inDir = config.inDir || './in';
+  var inDir = config.inDir || '';
+  var dataTypesConfig = config.dataTypes || config;
   _.waterfall({
     read: function(cb) {
-      read(cb, config);
+      read(cb, inDir, dataTypesConfig);
     },
     pipe: function(cb, dataTypes) {
       var cbWrap = function(err, i) {
@@ -35,9 +32,13 @@ var tomasi = function(config, cb) {
   }, cb);
 };
 
-var read = function(cb, config) {
-  _.map(config.dataTypes, function(cb, dataTypeConfig) {
-    var pattern = path.join(config.inDir, dataTypeConfig.in);
+var isObject = function(obj) {
+  return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+};
+
+var read = function(cb, inDir, dataTypesConfig) {
+  _.map(dataTypesConfig, function(cb, dataTypeConfig) {
+    var pattern = path.join(inDir, dataTypeConfig.in);
     _.waterfall({
       readFiles: function(cb) {
         readFiles(cb, pattern);
