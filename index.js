@@ -46,16 +46,25 @@ var tomasi = function(config, cb) {
 
 var read = function(cb, config) {
 
-  _.map(config.dataTypes, function(cb, configDataType) {
-    var pattern = pppath([config.inDir, configDataType.in]);
-    readFiles(cb, pattern, configDataType.out);
+  _.map(config.dataTypes, function(cb, dataTypeConfig) {
+    var pattern = pppath([config.inDir, dataTypeConfig.in]);
+    _.waterfall({
+      readFiles: function(cb) {
+        readFiles(cb, pattern);
+      },
+      clone: function(cb, files) {
+        _.map(dataTypeConfig.out, function() {
+          return clone(files);
+        });
+      }
+    }, cb);
   }, function(err, dataTypes) {
     cb(err, dataTypes);
   });
 
 };
 
-var readFiles = function(cb, pattern, viewsConfig) {
+var readFiles = function(cb, pattern) {
 
   _.waterfall({
     glob: function(cb) {
@@ -63,25 +72,20 @@ var readFiles = function(cb, pattern, viewsConfig) {
         cb(err, filenames);
       });
     },
-    read: function(cb, filenames) {
+    readFile: function(cb, filenames) {
       _.map(filenames, function(cb, filename) {
-        readFile(cb, pattern, filename);
+        readFile(cb, filename);
       }, function(err, files) {
         cb(err, files);
       });
-    },
-    clone: function(cb, files) {
-      cb(null, _.map(viewsConfig, function(viewConfig) {
-        return { config: viewConfig, files: clone(files) };
-      }));
     }
-  }, function(err, dataTypes) {
-    cb(err, dataTypes);
+  }, function(err, files) {
+    cb(err, files);
   });
 
 };
 
-var readFile = function(cb, pattern, filename) {
+var readFile = function(cb, filename) {
 
   fs.readFile(filename, function(err, buffer) {
     if (err) {
@@ -102,15 +106,16 @@ var readFile = function(cb, pattern, filename) {
 var pipe = function(cb, config, dataTypes, i) {
 
   var done = true;
-  _.each(dataTypes, function(cb, views) {
-    _.each(views, function(cb, view) {
-      var pipes = [].concat(view.config[i]).filter(Boolean);
-      if (!pipes.length) {
+  _.each(dataTypes, function(cb, dataType, dataTypeName) {
+    _.each(dataType, function(cb, files, viewName) {
+      var fns = config.dataTypes[dataTypeName].out[viewName][i];
+      fns = [].concat(fns).filter(Boolean);
+      if (!fns.length) {
         return cb();
       }
       done = false;
-      _.each(pipes, function(cb, pipe) {
-        pipe(cb, view.files.filter(Boolean), dataTypes, config);
+      _.each(fns, function(cb, fn) {
+        fn(cb, files, dataTypeName, viewName, dataTypes, config);
       }, function(err) {
         cb(err);
       });
