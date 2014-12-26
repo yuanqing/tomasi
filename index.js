@@ -13,12 +13,7 @@ var pppath = require('pppath');
 var tomasi = function(config, cb) {
 
   config = defaults(config, {
-    linkPrefix: '/',
     inDir: './in',
-    outDir: './out',
-    outFile: 'index.html',
-    tmplDir: './tmpl',
-    tmplEngine: 'ejs',
     dataTypes: {}
   });
   cb = cb || function(err) {
