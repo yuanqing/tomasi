@@ -2,26 +2,16 @@
 
 var _ = require('savoy');
 var clone = require('clone');
-var defaults = require('defaults');
-var extend = require('extend');
-var fastmatter = require('fastmatter');
 var fs = require('fs');
 var glob = require('glob');
 var isUtf8 = require('is-utf8');
-var pppath = require('pppath');
+var path = require('path');
 
 var tomasi = function(config, cb) {
-
-  config = defaults(config, {
-    inDir: './in',
-    dataTypes: {}
-  });
-  cb = cb || function(err) {
-    if (err) {
-      throw err;
-    }
-  };
-
+  if (typeof cb !== 'function') {
+    throw 'missing callback';
+  }
+  config.inDir = config.inDir || './in';
   _.waterfall({
     read: function(cb) {
       read(cb, config);
@@ -36,13 +26,11 @@ var tomasi = function(config, cb) {
       cbWrap(null, 0);
     }
   }, cb);
-
 };
 
 var read = function(cb, config) {
-
   _.map(config.dataTypes, function(cb, dataTypeConfig) {
-    var pattern = pppath([config.inDir, dataTypeConfig.in]);
+    var pattern = path.join(config.inDir, dataTypeConfig.in);
     _.waterfall({
       readFiles: function(cb) {
         readFiles(cb, pattern);
@@ -56,11 +44,9 @@ var read = function(cb, config) {
   }, function(err, dataTypes) {
     cb(err, dataTypes);
   });
-
 };
 
 var readFiles = function(cb, pattern) {
-
   _.waterfall({
     glob: function(cb) {
       glob(pattern, function(err, filenames) {
@@ -68,6 +54,9 @@ var readFiles = function(cb, pattern) {
       });
     },
     readFile: function(cb, filenames) {
+      if (filenames.length === 0) {
+        return cb('no files match the pattern ' + pattern);
+      }
       _.map(filenames, function(cb, filename) {
         readFile(cb, filename);
       }, function(err, files) {
@@ -77,29 +66,17 @@ var readFiles = function(cb, pattern) {
   }, function(err, files) {
     cb(err, files);
   });
-
 };
 
 var readFile = function(cb, filename) {
-
   fs.readFile(filename, function(err, buffer) {
-    if (err) {
-      return cb(err);
-    }
-    var file = {};
-    if (isUtf8(buffer)) {
-      var fields = fastmatter(buffer.toString());
-      extend(file, fields.attributes, { $content: fields.body });
-    } else {
-      file.$content = buffer;
-    }
-    cb(null, file);
+    cb(err, {
+      $content: isUtf8(buffer) ? buffer.toString() : buffer
+    });
   });
-
 };
 
 var pipe = function(cb, config, dataTypes, i) {
-
   var done = true;
   _.each(dataTypes, function(cb, dataType, dataTypeName) {
     _.each(dataType, function(cb, files, viewName) {
@@ -120,7 +97,6 @@ var pipe = function(cb, config, dataTypes, i) {
   }, function(err) {
     cb(err, done || i + 1);
   });
-
 };
 
 module.exports = tomasi;
