@@ -53,9 +53,9 @@ var read = function(cb, config) {
         readFiles(cb, pattern);
       },
       clone: function(cb, files) {
-        _.map(dataTypeConfig.out, function() {
+        cb(null, _.map(dataTypeConfig.out, function() {
           return clone(files);
-        });
+        }));
       }
     }, cb);
   }, function(err, dataTypes) {
