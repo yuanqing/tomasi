@@ -1,0 +1,35 @@
+{
+  "name": "tomasi",
+  "version": "0.0.0",
+  "description": "An extensible build system for making static websites.",
+  "author": "Lim Yuan Qing",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/yuanqing/tomasi.git"
+  },
+  "bin": {
+    "tomasi": "bin/tomasi"
+  },
+  "dependencies": {
+    "clone": "^0.2.0",
+    "defaults": "^1.0.0",
+    "extend": "^2.0.0",
+    "fastmatter": "^1.0.0",
+    "glob": "^4.3.2",
+    "is-utf8": "^0.2.0",
+    "pppath": "^0.1.3",
+    "savoy": "^0.2.2"
+  },
+  "keywords": [
+    "build",
+    "file",
+    "flat",
+    "generator",
+    "html",
+    "pipe",
+    "site",
+    "static",
+    "website"
+  ]
+}

@@ -1,0 +1,26 @@
+#! /usr/bin/env node
+
+'use strict';
+
+var tomasi = require('../index.js');
+var exists = require('fs').existsSync;
+var resolve = require('path').resolve;
+
+var error = function(err) {
+  console.error(err);
+  process.exit(1);
+};
+
+var configFile = resolve(process.cwd(), 'tomasi.js');
+if (!exists(configFile)) {
+  error('Could not find a `tomasi.js` file');
+}
+
+var config = require(configFile);
+tomasi(config, function(err) {
+  if (err) {
+    return error(err);
+  }
+  console.log('Done');
+  process.exit(0);
+});
