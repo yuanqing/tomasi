@@ -7,7 +7,14 @@ var glob = require('glob');
 var isUtf8 = require('is-utf8');
 var path = require('path');
 
+var isObject = function(obj) {
+  return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+};
+
 var tomasi = function(config, cb) {
+  if (!isObject(config)) {
+    throw 'missing config';
+  }
   if (typeof cb !== 'function') {
     throw 'missing callback';
   }

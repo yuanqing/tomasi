@@ -13,6 +13,12 @@ describe('tomasi(config, cb)', function() {
     expect(typeof tomasi).toBe('function');
   });
 
+  it('throws if no `config`', function() {
+    expect(function() {
+      tomasi();
+    }).toThrow('missing config');
+  });
+
   it('throws if no `cb`', function() {
     expect(function() {
       tomasi({});
