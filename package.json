@@ -21,6 +21,17 @@
     "pppath": "^0.1.3",
     "savoy": "^0.2.2"
   },
+  "devDependencies": {
+    "istanbul": "^0.3.5",
+    "jshint": "^2.5.11",
+    "jshint-stylish": "^1.0.0",
+    "minijasminenode2": "^1.0.0"
+  },
+  "scripts": {
+    "lint": "node_modules/.bin/jshint --reporter=node_modules/jshint-stylish/stylish.js --verbose index.js bin/tomasi",
+    "test": "rm -rf coverage && node_modules/.bin/istanbul cover -- node_modules/.bin/minijasminenode2 test/*.spec.js --verbose",
+    "build": "npm run lint && npm test"
+  },
   "keywords": [
     "build",
     "file",
