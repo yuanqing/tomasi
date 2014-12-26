@@ -8,7 +8,6 @@ var fastmatter = require('fastmatter');
 var fs = require('fs');
 var glob = require('glob');
 var isUtf8 = require('is-utf8');
-var noop = function() {};
 var pppath = require('pppath');
 
 var tomasi = function(config, cb) {
@@ -22,6 +21,11 @@ var tomasi = function(config, cb) {
     tmplEngine: 'ejs',
     dataTypes: {}
   });
+  cb = cb || function(err) {
+    if (err) {
+      throw err;
+    }
+  };
 
   _.waterfall({
     read: function(cb) {
@@ -30,15 +34,13 @@ var tomasi = function(config, cb) {
     pipe: function(cb, dataTypes) {
       var cbWrap = function(err, i) {
         if (err || i === true) {
-          return cb(err);
+          return cb(err, dataTypes);
         }
         pipe(cbWrap, config, dataTypes, i);
       };
       cbWrap(null, 0);
     }
-  }, function(err) {
-    (cb || noop)(err);
-  });
+  }, cb);
 
 };
 
@@ -82,7 +84,9 @@ var readFiles = function(cb, pattern, viewsConfig) {
 var readFile = function(cb, pattern, filename) {
 
   fs.readFile(filename, function(err, buffer) {
-    if (err) { return cb(err); }
+    if (err) {
+      return cb(err);
+    }
     var file = {};
     if (isUtf8(buffer)) {
       var fields = fastmatter(buffer.toString());
