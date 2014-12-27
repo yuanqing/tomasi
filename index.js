@@ -25,7 +25,7 @@ var tomasi = function(config, cb) {
         if (err || i === true) {
           return cb(err, dataTypes);
         }
-        pipe(cbWrap, config, dataTypes, i);
+        pipe(cbWrap, dataTypes, config, dataTypesConfig, i);
       };
       cbWrap(null, 0);
     }
@@ -84,11 +84,11 @@ var readFile = function(cb, filename) {
   });
 };
 
-var pipe = function(cb, config, dataTypes, i) {
+var pipe = function(cb, dataTypes, config, dataTypesConfig, i) {
   var done = true;
   _.each(dataTypes, function(cb, dataType, dataTypeName) {
     _.each(dataType, function(cb, files, viewName) {
-      var fns = config.dataTypes[dataTypeName].out[viewName][i];
+      var fns = dataTypesConfig[dataTypeName].out[viewName][i];
       fns = [].concat(fns).filter(Boolean);
       if (!fns.length) {
         return cb();

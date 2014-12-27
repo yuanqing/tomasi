@@ -1,4 +1,4 @@
-/* globals describe, it, expect, jasmine */
+/* globals describe, it, expect, jasmine, beforeEach, afterEach */
 'use strict';
 
 var tomasi = require('..');
@@ -30,28 +30,7 @@ describe('tomasi(config, cb)', function() {
       cb();
     });
     var config = {
-      'blog': {
-        in: 'invalid/*.txt',
-        out: {
-          'single': [
-            [ plugin ],
-          ]
-        }
-      }
-    };
-    expect(fs.existsSync('./invalid/')).toBe(false);
-    tomasi(config, function(err) {
-      expect(err).toBe('no files match the pattern invalid/*.txt');
-      done();
-    });
-  });
-
-  it('handles utf8 files', function(done) {
-    var plugin = jasmine.createSpy().and.callFake(function(cb) {
-      cb();
-    });
-    var config = {
-      inDir: inDir,
+      inDir: 'invalid',
       dataTypes: {
         'blog': {
           in: '*.txt',
@@ -63,27 +42,77 @@ describe('tomasi(config, cb)', function() {
         }
       }
     };
+    expect(fs.existsSync('invalid')).toBe(false);
     tomasi(config, function(err) {
-      var files = [
-        { $content: 'foo' }
-      ];
-      var dataTypes = {
-        'blog': {
-          'single': files
-        }
-      };
-      var args = plugin.calls.argsFor(0);
-      expect(err).toBeFalsy();
-      expect(plugin.calls.count(0)).toBe(1);
-      expect(args[0]).toEqual(jasmine.any(Function));
-      expect(args[1]).toBe(args[4].blog.single);
-      expect(args[1]).toEqual(files);
-      expect(args[2]).toEqual('blog');
-      expect(args[3]).toEqual('single');
-      expect(args[4]).toEqual(dataTypes);
-      expect(args[5]).toEqual(config);
+      expect(err.indexOf('no files match the pattern')).toBe(0);
+      expect(plugin.calls.count()).toBe(0);
       done();
     });
+  });
+
+  describe('`config.dataTypes`', function() {
+
+    var plugin, config;
+
+    beforeEach(function() {
+      plugin = jasmine.createSpy().and.callFake(function(cb) {
+        cb();
+      });
+    });
+
+    it('is set', function() {
+      config = {
+        inDir: inDir,
+        dataTypes: {
+          'blog': {
+            in: '*.txt',
+            out: {
+              'single': [
+                [ plugin ],
+              ]
+            }
+          }
+        }
+      };
+    });
+
+    it('is not set', function() {
+      config = {
+        'blog': {
+          in: inDir + '*.txt',
+          out: {
+            'single': [
+              [ plugin ],
+            ]
+          }
+        }
+      };
+    });
+
+    afterEach(function(done) {
+      tomasi(config, function(err) {
+        var files = [
+          { $content: 'foo' }
+        ];
+        var dataTypes = {
+          'blog': {
+            'single': files
+          }
+        };
+        var args = plugin.calls.argsFor(0);
+        expect(err).toBeFalsy();
+        expect(plugin.calls.count()).toBe(1);
+        expect(typeof args[0]).toBe('function');
+        expect(args[1]).toBe(args[4].blog.single);
+        expect(args[1]).toEqual(files);
+        expect(args[2]).toBe('blog');
+        expect(args[3]).toBe('single');
+        expect(args[4]).toEqual(dataTypes);
+        expect(args[5]).toBe(config);
+        done();
+      });
+    });
+
   });
 
   it('handles non-utf8 files', function(done) {
@@ -107,15 +136,15 @@ describe('tomasi(config, cb)', function() {
       var img = fs.readFileSync(inDir + 'heart.png');
       var args = plugin.calls.argsFor(0);
       expect(err).toBeFalsy();
-      expect(plugin.calls.count(0)).toBe(1);
-      expect(args[0]).toEqual(jasmine.any(Function));
+      expect(plugin.calls.count()).toBe(1);
+      expect(typeof args[0]).toBe('function');
       expect(args[1]).toBe(args[4].images.single);
       expect(args[1].length).toBe(1);
       expect(bufferEqual(args[1][0].$content, img)).toBe(true);
-      expect(args[2]).toEqual('images');
-      expect(args[3]).toEqual('single');
+      expect(args[2]).toBe('images');
+      expect(args[3]).toBe('single');
       expect(bufferEqual(args[4].images.single[0].$content, img)).toBe(true);
-      expect(args[5]).toEqual(config);
+      expect(args[5]).toBe(config);
       done();
     });
   });
