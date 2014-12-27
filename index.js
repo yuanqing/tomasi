@@ -94,8 +94,13 @@ var pipe = function(cb, dataTypes, config, dataTypesConfig, i) {
         return cb();
       }
       done = false;
-      _.each(fns, function(cb, fn) {
-        fn(cb, files, dataTypeName, viewName, dataTypes, config);
+      _.eachSeries(fns, function(cb, fn) {
+        fn(function(err, result) {
+          if (typeof result !== 'undefined') {
+            dataType[viewName] = result;
+          }
+          cb(err);
+        }, dataType[viewName], dataTypeName, viewName, dataTypes, config);
       }, function(err) {
         cb(err);
       });
