@@ -1,4 +1,4 @@
-/* globals describe, it, expect, jasmine, beforeEach, afterEach */
+/* globals describe, it, expect, jasmine */
 'use strict';
 
 var tomasi = require('..');
@@ -6,6 +6,10 @@ var fs = require('fs');
 var bufferEqual = require('buffer-equal');
 
 var inDir = './test/fixtures/';
+
+var slice = function(args) {
+  return [].slice.call(args);
+};
 
 describe('tomasi(config, cb)', function() {
 
@@ -25,15 +29,14 @@ describe('tomasi(config, cb)', function() {
     }).toThrow('missing callback');
   });
 
-  it('calls `cb` with an `err` if no files match the `in` pattern', function(done) {
+  it('calls `cb` with an `err` if no files match an `in` pattern', function(done) {
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
       cb();
     });
     var config = {
-      inDir: 'invalid',
       dataTypes: {
         'blog': {
-          in: '*.txt',
+          in: 'invalid/*.txt',
           out: {
             'single': [
               [ plugin ],
@@ -50,101 +53,281 @@ describe('tomasi(config, cb)', function() {
     });
   });
 
-  describe('`config.dataTypes`', function() {
-
-    var plugin, config;
-
-    beforeEach(function() {
-      plugin = jasmine.createSpy().and.callFake(function(cb) {
-        cb();
-      });
-    });
-
-    it('is set', function() {
-      config = {
-        inDir: inDir,
-        dataTypes: {
-          'blog': {
-            in: '*.txt',
-            out: {
-              'single': [
-                [ plugin ],
-              ]
-            }
-          }
-        }
-      };
-    });
-
-    it('is not set', function() {
-      config = {
+  it('can read utf8 files', function(done) {
+    var plugin = jasmine.createSpy().and.callFake(function(cb) {
+      var files = [
+        { $content: 'foo' },
+        { $content: 'bar' },
+        { $content: 'baz' }
+      ];
+      var dataTypes = {
         'blog': {
-          in: inDir + '*.txt',
-          out: {
-            'single': [
-              [ plugin ],
-            ]
-          }
+          'single': files
         }
       };
+      var args = slice(arguments);
+      expect(args.length).toBe(6);
+      expect(args[1]).toEqual(files);
+      expect(args[2]).toBe('blog');
+      expect(args[3]).toBe('single');
+      expect(args[4]).toEqual(dataTypes);
+      expect(args[5]).toEqual(config);
+      expect(args[1]).toBe(args[4].blog.single);
+      cb();
     });
-
-    afterEach(function(done) {
-      tomasi(config, function(err) {
-        var files = [
-          { $content: 'foo' }
-        ];
-        var dataTypes = {
-          'blog': {
-            'single': files
-          }
-        };
-        var args = plugin.calls.argsFor(0);
-        expect(err).toBeFalsy();
-        expect(plugin.calls.count()).toBe(1);
-        expect(typeof args[0]).toBe('function');
-        expect(args[1]).toBe(args[4].blog.single);
-        expect(args[1]).toEqual(files);
-        expect(args[2]).toBe('blog');
-        expect(args[3]).toBe('single');
-        expect(args[4]).toEqual(dataTypes);
-        expect(args[5]).toBe(config);
-        done();
-      });
+    var config = {
+      'blog': {
+        in: inDir + '*.txt',
+        out: {
+          'single': [
+            [ plugin ]
+          ]
+        }
+      }
+    };
+    tomasi(config, function(err) {
+      expect(err).toBeFalsy();
+      expect(plugin.calls.count()).toBe(1);
+      done();
     });
-
   });
 
-  it('handles non-utf8 files', function(done) {
+  it('can read non-utf8 files', function(done) {
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
+      var args = slice(arguments);
+      expect(args.length).toBe(6);
+      expect(args[2]).toBe('images');
+      expect(args[3]).toBe('single');
+      expect(args[5]).toEqual(config);
+      expect(args[1]).toBe(args[4].images.single);
+      var img = fs.readFileSync(inDir + 'heart.png');
+      expect(args[1].length).toBe(1);
+      expect(bufferEqual(args[1][0].$content, img)).toBe(true);
+      cb();
+    });
+    var config = {
+      'images': {
+        in: inDir + '*.png',
+        out: {
+          'single': [
+            [ plugin ]
+          ]
+        }
+      }
+    };
+    tomasi(config, function(err) {
+      expect(err).toBeFalsy();
+      expect(plugin.calls.count()).toBe(1);
+      done();
+    });
+  });
+
+  it('prefixes value of `config.inDir` to `in` of each data type', function(done) {
+    var plugin = jasmine.createSpy().and.callFake(function(cb) {
+      var files = [
+        { $content: 'foo' },
+        { $content: 'bar' },
+        { $content: 'baz' }
+      ];
+      var dataTypes = {
+        'blog': {
+          'single': files
+        }
+      };
+      var args = slice(arguments);
+      expect(args.length).toBe(6);
+      expect(args[1]).toEqual(files);
+      expect(args[2]).toBe('blog');
+      expect(args[3]).toBe('single');
+      expect(args[4]).toEqual(dataTypes);
+      expect(args[5]).toEqual(config);
+      expect(args[1]).toBe(args[4].blog.single);
       cb();
     });
     var config = {
       inDir: inDir,
-      dataTypes: {
-        'images': {
-          in: '*.png',
+      dataTypes: { // data types must be defined under `config.dataTypes`
+        'blog': {
+          in: '*.txt',
           out: {
             'single': [
-              [ plugin ],
+              [ plugin ]
             ]
           }
         }
       }
     };
     tomasi(config, function(err) {
-      var img = fs.readFileSync(inDir + 'heart.png');
-      var args = plugin.calls.argsFor(0);
       expect(err).toBeFalsy();
       expect(plugin.calls.count()).toBe(1);
-      expect(typeof args[0]).toBe('function');
-      expect(args[1]).toBe(args[4].images.single);
-      expect(args[1].length).toBe(1);
-      expect(bufferEqual(args[1][0].$content, img)).toBe(true);
-      expect(args[2]).toBe('images');
+      done();
+    });
+  });
+
+  it('updates `files` and `dataTypes` if `cb` in a plugin is passed a second argument', function(done) {
+    var filterPlugin = jasmine.createSpy().and.callFake(function(cb) {
+      var files = [
+        { $content: 'foo' },
+        { $content: 'bar' },
+        { $content: 'baz' }
+      ];
+      var dataTypes = {
+        'blog': {
+          'single': files
+        }
+      };
+      var args = slice(arguments);
+      expect(args.length).toBe(6);
+      expect(args[1]).toEqual(files);
+      expect(args[2]).toBe('blog');
       expect(args[3]).toBe('single');
-      expect(bufferEqual(args[4].images.single[0].$content, img)).toBe(true);
-      expect(args[5]).toBe(config);
+      expect(args[4]).toEqual(dataTypes);
+      expect(args[5]).toEqual(config);
+      expect(args[1]).toBe(args[4].blog.single);
+      cb(null, args[1].filter(function(file) {
+        return file.$content === 'bar';
+      })); // call `cb` with the filtered files
+    });
+    var plugin = jasmine.createSpy().and.callFake(function(cb) {
+      var files = [
+        { $content: 'bar' }
+      ];
+      var dataTypes = {
+        'blog': {
+          'single': files
+        }
+      };
+      var args = slice(arguments);
+      expect(args.length).toBe(6);
+      expect(args[1]).toEqual(files);
+      expect(args[2]).toBe('blog');
+      expect(args[3]).toBe('single');
+      expect(args[4]).toEqual(dataTypes);
+      expect(args[5]).toEqual(config);
+      expect(args[1]).toBe(args[4].blog.single);
+      cb();
+    });
+    var config = {
+      inDir: inDir,
+      dataTypes: {
+        'blog': {
+          in: '*.txt',
+          out: {
+            'single': [
+              [ filterPlugin, plugin ]
+            ]
+          }
+        }
+      }
+    };
+    tomasi(config, function(err) {
+      expect(err).toBeFalsy();
+      expect(filterPlugin.calls.count()).toBe(1);
+      expect(plugin.calls.count()).toBe(1);
+      done();
+    });
+  });
+
+  it('calls plugins in a single pipeline in series', function(done) {
+    var calls = [];
+    var a = jasmine.createSpy().and.callFake(function(cb) {
+      calls.push('a');
+      cb();
+    });
+    var b = jasmine.createSpy().and.callFake(function(cb) {
+      calls.push('b');
+      cb();
+    });
+    var config = {
+      inDir: inDir,
+      dataTypes: {
+        'blog': {
+          in: '*.txt',
+          out: {
+            'single': [
+              [ a, b ]
+            ]
+          }
+        }
+      }
+    };
+    tomasi(config, function(err) {
+      expect(err).toBeFalsy();
+      expect(a.calls.count()).toBe(1);
+      expect(b.calls.count()).toBe(1);
+      expect(calls).toEqual(['a', 'b']);
+      done();
+    });
+  });
+
+  it('calls pipelines at the same level in parallel', function(done) {
+    var calls = [];
+    var a = jasmine.createSpy().and.callFake(function(cb) {
+      setTimeout(function() {
+        calls.push('a');
+        cb();
+      }, 10);
+    });
+    var b = jasmine.createSpy().and.callFake(function(cb) {
+      calls.push('b');
+      cb();
+    });
+    var config = {
+      inDir: inDir,
+      dataTypes: {
+        'blog': {
+          in: '*.txt',
+          out: {
+            'single': [
+              [ a ]
+            ],
+            'archive': [
+              [ b ]
+            ]
+          }
+        }
+      }
+    };
+    tomasi(config, function(err) {
+      expect(err).toBeFalsy();
+      expect(a.calls.count()).toBe(1);
+      expect(b.calls.count()).toBe(1);
+      expect(calls).toEqual(['b', 'a']);
+      done();
+    });
+  });
+
+  it('calls adjoining pipelines in series', function(done) {
+    var calls = [];
+    var a = jasmine.createSpy().and.callFake(function(cb) {
+      setTimeout(function() {
+        calls.push('a');
+        cb();
+      }, 10);
+    });
+    var b = jasmine.createSpy().and.callFake(function(cb) {
+      calls.push('b');
+      cb();
+    });
+    var config = {
+      inDir: inDir,
+      dataTypes: {
+        'blog': {
+          in: '*.txt',
+          out: {
+            'single': [
+              [ a ],
+              [ b ]
+            ]
+          }
+        }
+      }
+    };
+    tomasi(config, function(err) {
+      expect(err).toBeFalsy();
+      expect(a.calls.count()).toBe(1);
+      expect(b.calls.count()).toBe(1);
+      expect(calls).toEqual(['a', 'b']);
       done();
     });
   });

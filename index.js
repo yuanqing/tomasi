@@ -14,8 +14,12 @@ var tomasi = function(config, cb) {
   if (typeof cb !== 'function') {
     throw 'missing callback';
   }
-  var inDir = config.inDir || '';
-  var dataTypesConfig = config.dataTypes || config;
+  var inDir = '';
+  var dataTypesConfig = config;
+  if (config.dataTypes) {
+    inDir = config.inDir || '';
+    dataTypesConfig = config.dataTypes;
+  }
   _.waterfall({
     read: function(cb) {
       read(cb, inDir, dataTypesConfig);
