@@ -15,7 +15,7 @@
     "clone": "^0.2.0",
     "glob": "^4.3.2",
     "is-utf8": "^0.2.0",
-    "savoy": "^0.2.2"
+    "savoy": "^0.3.0"
   },
   "devDependencies": {
     "buffer-equal": "0.0.1",
