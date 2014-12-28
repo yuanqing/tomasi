@@ -9,10 +9,10 @@ var path = require('path');
 
 var tomasi = function(config, cb) {
   if (!isObject(config)) {
-    throw 'missing config';
+    throw new Error('missing config');
   }
   if (typeof cb !== 'function') {
-    throw 'missing callback';
+    throw new Error('missing callback');
   }
   var inDir = '';
   var dataTypesConfig = config;

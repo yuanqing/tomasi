@@ -20,13 +20,13 @@ describe('tomasi(config, cb)', function() {
   it('throws if no `config`', function() {
     expect(function() {
       tomasi();
-    }).toThrow('missing config');
+    }).toThrow();
   });
 
   it('throws if no `cb`', function() {
     expect(function() {
       tomasi({});
-    }).toThrow('missing callback');
+    }).toThrow();
   });
 
   it('calls `cb` with an `err` if no files match an `in` pattern', function(done) {
