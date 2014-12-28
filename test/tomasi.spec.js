@@ -54,9 +54,9 @@ describe('tomasi(config, cb)', function() {
   it('can read utf8 files', function(done) {
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
       var files = [
-        { $content: 'foo' },
-        { $content: 'bar' },
-        { $content: 'baz' }
+        { $inPath: inDir + '1-foo.txt', $content: 'foo' },
+        { $inPath: inDir + '2-bar.txt', $content: 'bar' },
+        { $inPath: inDir + '3-baz.txt', $content: 'baz' }
       ];
       var dataTypes = {
         'blog': {
@@ -96,8 +96,10 @@ describe('tomasi(config, cb)', function() {
       expect(args[2]).toBe('images');
       expect(args[3]).toBe('single');
       expect(args[1]).toBe(args[4].images.single);
-      var img = fs.readFileSync(inDir + 'heart.png');
+      var inPath = inDir + 'heart.png';
+      var img = fs.readFileSync(inPath);
       expect(args[1].length).toBe(1);
+      expect(args[1][0].$inPath).toBe(inPath);
       expect(bufferEqual(args[1][0].$content, img)).toBe(true);
       cb();
     });
@@ -121,9 +123,9 @@ describe('tomasi(config, cb)', function() {
   it('prefixes value of `config.inDir` to `in` of each data type', function(done) {
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
       var files = [
-        { $content: 'foo' },
-        { $content: 'bar' },
-        { $content: 'baz' }
+        { $inPath: inDir + '1-foo.txt', $content: 'foo' },
+        { $inPath: inDir + '2-bar.txt', $content: 'bar' },
+        { $inPath: inDir + '3-baz.txt', $content: 'baz' }
       ];
       var dataTypes = {
         'blog': {
@@ -159,9 +161,9 @@ describe('tomasi(config, cb)', function() {
   it('updates `files` and `dataTypes` if `cb` in a plugin is passed a second argument', function(done) {
     var filterPlugin = jasmine.createSpy().and.callFake(function(cb) {
       var files = [
-        { $content: 'foo' },
-        { $content: 'bar' },
-        { $content: 'baz' }
+        { $inPath: inDir + '1-foo.txt', $content: 'foo' },
+        { $inPath: inDir + '2-bar.txt', $content: 'bar' },
+        { $inPath: inDir + '3-baz.txt', $content: 'baz' }
       ];
       var dataTypes = {
         'blog': {
@@ -181,7 +183,7 @@ describe('tomasi(config, cb)', function() {
     });
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
       var files = [
-        { $content: 'bar' }
+        { $inPath: inDir + '2-bar.txt', $content: 'bar' }
       ];
       var dataTypes = {
         'blog': {

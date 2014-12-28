@@ -75,6 +75,7 @@ var readFiles = function(cb, pattern) {
 var readFile = function(cb, filename) {
   fs.readFile(filename, function(err, buffer) {
     cb(err, {
+      $inPath: filename,
       $content: isUtf8(buffer) ? buffer.toString() : buffer
     });
   });
