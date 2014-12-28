@@ -34,14 +34,12 @@ describe('tomasi(config, cb)', function() {
       cb();
     });
     var config = {
-      dataTypes: {
-        'blog': {
-          in: 'invalid/*.txt',
-          out: {
-            'single': [
-              [ plugin ],
-            ]
-          }
+      'blog': {
+        in: 'invalid/*.txt',
+        out: {
+          'single': [
+            [ plugin ],
+          ]
         }
       }
     };
@@ -66,12 +64,11 @@ describe('tomasi(config, cb)', function() {
         }
       };
       var args = slice(arguments);
-      expect(args.length).toBe(6);
+      expect(args.length).toBe(5);
       expect(args[1]).toEqual(files);
       expect(args[2]).toBe('blog');
       expect(args[3]).toBe('single');
       expect(args[4]).toEqual(dataTypes);
-      expect(args[5]).toEqual(config);
       expect(args[1]).toBe(args[4].blog.single);
       cb();
     });
@@ -95,10 +92,9 @@ describe('tomasi(config, cb)', function() {
   it('can read non-utf8 files', function(done) {
     var plugin = jasmine.createSpy().and.callFake(function(cb) {
       var args = slice(arguments);
-      expect(args.length).toBe(6);
+      expect(args.length).toBe(5);
       expect(args[2]).toBe('images');
       expect(args[3]).toBe('single');
-      expect(args[5]).toEqual(config);
       expect(args[1]).toBe(args[4].images.single);
       var img = fs.readFileSync(inDir + 'heart.png');
       expect(args[1].length).toBe(1);
@@ -135,25 +131,21 @@ describe('tomasi(config, cb)', function() {
         }
       };
       var args = slice(arguments);
-      expect(args.length).toBe(6);
+      expect(args.length).toBe(5);
       expect(args[1]).toEqual(files);
       expect(args[2]).toBe('blog');
       expect(args[3]).toBe('single');
       expect(args[4]).toEqual(dataTypes);
-      expect(args[5]).toEqual(config);
       expect(args[1]).toBe(args[4].blog.single);
       cb();
     });
     var config = {
-      inDir: inDir,
-      dataTypes: { // data types must be defined under `config.dataTypes`
-        'blog': {
-          in: '*.txt',
-          out: {
-            'single': [
-              [ plugin ]
-            ]
-          }
+      'blog': {
+        in: inDir + '*.txt',
+        out: {
+          'single': [
+            [ plugin ]
+          ]
         }
       }
     };
@@ -177,12 +169,11 @@ describe('tomasi(config, cb)', function() {
         }
       };
       var args = slice(arguments);
-      expect(args.length).toBe(6);
+      expect(args.length).toBe(5);
       expect(args[1]).toEqual(files);
       expect(args[2]).toBe('blog');
       expect(args[3]).toBe('single');
       expect(args[4]).toEqual(dataTypes);
-      expect(args[5]).toEqual(config);
       expect(args[1]).toBe(args[4].blog.single);
       cb(null, args[1].filter(function(file) {
         return file.$content === 'bar';
@@ -198,25 +189,21 @@ describe('tomasi(config, cb)', function() {
         }
       };
       var args = slice(arguments);
-      expect(args.length).toBe(6);
+      expect(args.length).toBe(5);
       expect(args[1]).toEqual(files);
       expect(args[2]).toBe('blog');
       expect(args[3]).toBe('single');
       expect(args[4]).toEqual(dataTypes);
-      expect(args[5]).toEqual(config);
       expect(args[1]).toBe(args[4].blog.single);
       cb();
     });
     var config = {
-      inDir: inDir,
-      dataTypes: {
-        'blog': {
-          in: '*.txt',
-          out: {
-            'single': [
-              [ filterPlugin, plugin ]
-            ]
-          }
+      'blog': {
+        in: inDir + '*.txt',
+        out: {
+          'single': [
+            [ filterPlugin, plugin ]
+          ]
         }
       }
     };
@@ -239,15 +226,12 @@ describe('tomasi(config, cb)', function() {
       cb();
     });
     var config = {
-      inDir: inDir,
-      dataTypes: {
-        'blog': {
-          in: '*.txt',
-          out: {
-            'single': [
-              [ a, b ]
-            ]
-          }
+      'blog': {
+        in: inDir + '*.txt',
+        out: {
+          'single': [
+            [ a, b ]
+          ]
         }
       }
     };
@@ -273,18 +257,15 @@ describe('tomasi(config, cb)', function() {
       cb();
     });
     var config = {
-      inDir: inDir,
-      dataTypes: {
-        'blog': {
-          in: '*.txt',
-          out: {
-            'single': [
-              [ a ]
-            ],
-            'archive': [
-              [ b ]
-            ]
-          }
+      'blog': {
+        in: inDir + '*.txt',
+        out: {
+          'single': [
+            [ a ]
+          ],
+          'archive': [
+            [ b ]
+          ]
         }
       }
     };
@@ -310,16 +291,13 @@ describe('tomasi(config, cb)', function() {
       cb();
     });
     var config = {
-      inDir: inDir,
-      dataTypes: {
-        'blog': {
-          in: '*.txt',
-          out: {
-            'single': [
-              [ a ],
-              [ b ]
-            ]
-          }
+      'blog': {
+        in: inDir + '*.txt',
+        out: {
+          'single': [
+            [ a ],
+            [ b ]
+          ]
         }
       }
     };

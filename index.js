@@ -14,22 +14,16 @@ var tomasi = function(config, cb) {
   if (typeof cb !== 'function') {
     throw new Error('missing callback');
   }
-  var inDir = '';
-  var dataTypesConfig = config;
-  if (config.dataTypes) {
-    inDir = config.inDir || '';
-    dataTypesConfig = config.dataTypes;
-  }
   _.waterfall({
     read: function(cb) {
-      read(cb, inDir, dataTypesConfig);
+      read(cb, config);
     },
     pipe: function(cb, dataTypes) {
       var cbWrap = function(err, i) {
         if (err || i === true) {
           return cb(err, dataTypes);
         }
-        pipe(cbWrap, dataTypes, config, dataTypesConfig, i);
+        pipe(cbWrap, dataTypes, config, i);
       };
       cbWrap(null, 0);
     }
@@ -40,12 +34,11 @@ var isObject = function(obj) {
   return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
 };
 
-var read = function(cb, inDir, dataTypesConfig) {
-  _.map(dataTypesConfig, function(cb, dataTypeConfig) {
-    var pattern = path.join(inDir, dataTypeConfig.in);
+var read = function(cb, config) {
+  _.map(config, function(cb, dataTypeConfig) {
     _.waterfall({
       readFiles: function(cb) {
-        readFiles(cb, pattern);
+        readFiles(cb, dataTypeConfig.in);
       },
       clone: function(cb, files) {
         cb(null, _.map(dataTypeConfig.out, function() {
@@ -88,11 +81,11 @@ var readFile = function(cb, filename) {
   });
 };
 
-var pipe = function(cb, dataTypes, config, dataTypesConfig, i) {
+var pipe = function(cb, dataTypes, config, i) {
   var done = true;
   _.each(dataTypes, function(cb, dataType, dataTypeName) {
     _.each(dataType, function(cb, files, viewName) {
-      var fns = dataTypesConfig[dataTypeName].out[viewName][i];
+      var fns = config[dataTypeName].out[viewName][i];
       fns = [].concat(fns).filter(Boolean);
       if (!fns.length) {
         return cb();
@@ -104,7 +97,7 @@ var pipe = function(cb, dataTypes, config, dataTypesConfig, i) {
             dataType[viewName] = result;
           }
           cb(err);
-        }, dataType[viewName], dataTypeName, viewName, dataTypes, config);
+        }, dataType[viewName], dataTypeName, viewName, dataTypes);
       }, function(err) {
         cb(err);
       });
