@@ -5,7 +5,6 @@ var clone = require('clone');
 var fs = require('fs');
 var glob = require('glob');
 var isUtf8 = require('is-utf8');
-var path = require('path');
 
 var tomasi = function(config, cb) {
   if (!isObject(config)) {
