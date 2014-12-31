@@ -4,6 +4,7 @@ var _ = require('savoy');
 var clone = require('clone');
 var fs = require('fs');
 var glob = require('glob');
+var isObject = require('lodash.isplainobject');
 var isUtf8 = require('is-utf8');
 
 var tomasi = function(config, cb) {
@@ -27,10 +28,6 @@ var tomasi = function(config, cb) {
       cbWrap(null, 0);
     }
   }, cb);
-};
-
-var isObject = function(obj) {
-  return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
 };
 
 var read = function(cb, config) {
