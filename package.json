@@ -15,18 +15,18 @@
     "clone": "^0.2.0",
     "glob": "^4.3.2",
     "is-utf8": "^0.2.0",
+    "lodash.isplainobject": "^2.4.1",
     "savoy": "^0.3.0"
   },
   "devDependencies": {
     "buffer-equal": "0.0.1",
     "istanbul": "^0.3.5",
     "jshint": "^2.5.11",
-    "jshint-stylish": "^1.0.0",
-    "minijasminenode2": "^1.0.0"
+    "tape": "^3.0.3"
   },
   "scripts": {
-    "lint": "node_modules/.bin/jshint --reporter=node_modules/jshint-stylish/stylish.js --verbose index.js test/*.spec.js bin/tomasi",
-    "test": "rm -rf coverage && node_modules/.bin/istanbul cover -- node_modules/.bin/minijasminenode2 test/*.spec.js --verbose",
+    "lint": "jshint --verbose index.js test/*.js",
+    "test": "rm -rf coverage && istanbul cover tape test/index.js",
     "build": "npm run lint && npm test"
   },
   "keywords": [
