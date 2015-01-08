@@ -1,6 +1,6 @@
 {
   "name": "tomasi",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "An extensible build system for making static websites.",
   "author": "Lim Yuan Qing",
   "license": "MIT",
