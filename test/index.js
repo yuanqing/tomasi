@@ -30,10 +30,10 @@ test('calls `cb` with an `err` if no files match an `in` pattern', function(t) {
     cb();
   };
   var config = {
-    'blog': {
+    blog: {
       in: 'invalid/*.txt',
       out: {
-        'single': [
+        post: [
           [ x ],
         ]
       }
@@ -57,8 +57,8 @@ test('can read utf8 files', function(t) {
       { $inPath: inDir + '3-baz.txt', $content: 'baz' }
     ];
     var expectedDataTypes = {
-      'blog': {
-        'single': expectedFiles
+      blog: {
+        single: expectedFiles
       }
     };
     t.equal(arguments.length, 5);
@@ -70,10 +70,10 @@ test('can read utf8 files', function(t) {
     cb();
   };
   var config = {
-    'blog': {
+    blog: {
       in: inDir + '*.txt',
       out: {
-        'single': [
+        single: [
           [ x ]
         ]
       }
@@ -102,10 +102,10 @@ test('can read not-utf8 files', function(t) {
     cb();
   };
   var config = {
-    'images': {
+    images: {
       in: inDir + '*.png',
       out: {
-        'single': [
+        single: [
           [ x ]
         ]
       }
@@ -137,10 +137,10 @@ test('calls plugins in a single pipeline in series', function(t) {
     }, 10);
   };
   var config = {
-    'blog': {
+    blog: {
       in: inDir + '*.txt',
       out: {
-        'single': [
+        single: [
           [ x, y ]
         ]
       }
@@ -172,10 +172,10 @@ test('calls plugins in adjoining pipelines in series', function(t) {
     }, 10);
   };
   var config = {
-    'blog': {
+    blog: {
       in: inDir + '*.txt',
       out: {
-        'single': [
+        single: [
           [ x ],
           [ y ]
         ]
@@ -213,14 +213,14 @@ test('calls plugins in parallel pipelines in parallel', function(t) {
     }, 30);
   };
   var config = {
-    'blog': {
+    blog: {
       in: inDir + '*.txt',
       out: {
-        'single': [
+        single: [
           [ x ],
           [ y ]
         ],
-        'archive': [
+        archive: [
           [ z ]
         ]
       }
