@@ -16,7 +16,8 @@
     "glob": "^4.3.2",
     "is-utf8": "^0.2.0",
     "lodash.isplainobject": "^2.4.1",
-    "savoy": "^0.3.0"
+    "savoy": "^0.3.0",
+    "tomasi-plugins": "*"
   },
   "devDependencies": {
     "buffer-equal": "0.0.1",
@@ -26,7 +27,7 @@
   },
   "scripts": {
     "lint": "jshint --verbose index.js test/*.js",
-    "test": "rm -rf coverage && istanbul cover tape test/index.js",
+    "test": "rm -rf coverage && istanbul cover tape test/*.js",
     "build": "npm run lint && npm test"
   },
   "keywords": [

@@ -3,6 +3,7 @@
 'use strict';
 
 var tomasi = require('..');
+var plugins = require('tomasi-plugins');
 var exists = require('fs').existsSync;
 var resolve = require('path').resolve;
 
@@ -19,7 +20,7 @@ if (!exists(configFile)) {
 }
 
 var config = require(configFile);
-tomasi(config, function(err) {
+tomasi(config(plugins), function(err) {
   if (err) {
     return error(err);
   }
