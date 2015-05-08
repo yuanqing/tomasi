@@ -37,7 +37,7 @@ var normalise = function(cb, config) {
   cb(null, _.map(config, function(dataTypeConfig) {
     if (!isObject(dataTypeConfig.out)) {
       dataTypeConfig.out = {
-        _: dataTypeConfig.out
+        $: dataTypeConfig.out
       };
     }
     return dataTypeConfig;

@@ -118,7 +118,7 @@ test('can read not-utf8 files', function(t) {
   });
 });
 
-test('if not specified, `viewName` defaults to "_"', function(t) {
+test('if not specified, `viewName` defaults to "$"', function(t) {
   var calls = [];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
@@ -129,15 +129,15 @@ test('if not specified, `viewName` defaults to "_"', function(t) {
     ];
     var expectedDataTypes = {
       blog: {
-        _: expectedFiles
+        $: expectedFiles
       }
     };
     t.equal(arguments.length, 5);
     t.deepEqual(files, expectedFiles);
     t.equal(dataTypeName, 'blog');
-    t.equal(viewName, '_');
+    t.equal(viewName, '$');
     t.deepEqual(dataTypes, expectedDataTypes);
-    t.equal(files, dataTypes.blog._);
+    t.equal(files, dataTypes.blog.$);
     cb();
   };
   var config = {
