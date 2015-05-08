@@ -118,6 +118,41 @@ test('can read not-utf8 files', function(t) {
   });
 });
 
+test('if not specified, `viewName` defaults to "_"', function(t) {
+  var calls = [];
+  var x = function(cb, files, dataTypeName, viewName, dataTypes) {
+    calls.push(1);
+    var expectedFiles = [
+      { $inPath: inDir + '1-foo.txt', $content: 'foo' },
+      { $inPath: inDir + '2-bar.txt', $content: 'bar' },
+      { $inPath: inDir + '3-baz.txt', $content: 'baz' }
+    ];
+    var expectedDataTypes = {
+      blog: {
+        _: expectedFiles
+      }
+    };
+    t.equal(arguments.length, 5);
+    t.deepEqual(files, expectedFiles);
+    t.equal(dataTypeName, 'blog');
+    t.equal(viewName, '_');
+    t.deepEqual(dataTypes, expectedDataTypes);
+    t.equal(files, dataTypes.blog._);
+    cb();
+  };
+  var config = {
+    blog: {
+      in: inDir + '*.txt',
+      out: [ x ]
+    }
+  };
+  tomasi(config, function(err) {
+    t.false(err);
+    t.looseEquals(calls, [1]);
+    t.end();
+  });
+});
+
 test('calls plugins in a single pipeline in series', function(t) {
   var calls = [];
   var x = function(cb) {

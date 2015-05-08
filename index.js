@@ -15,7 +15,10 @@ var tomasi = function(config, cb) {
     throw new Error('missing callback');
   }
   _.waterfall({
-    read: function(cb) {
+    normalise: function(cb) {
+      normalise(cb, config);
+    },
+    read: function(cb, config) {
       read(cb, config);
     },
     pipe: function(cb, dataTypes) {
@@ -28,6 +31,17 @@ var tomasi = function(config, cb) {
       cbWrap(null, 0);
     }
   }, cb);
+};
+
+var normalise = function(cb, config) {
+  cb(null, _.map(config, function(dataTypeConfig) {
+    if (!isObject(dataTypeConfig.out)) {
+      dataTypeConfig.out = {
+        _: dataTypeConfig.out
+      };
+    }
+    return dataTypeConfig;
+  }));
 };
 
 var read = function(cb, config) {
