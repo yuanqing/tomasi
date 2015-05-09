@@ -9,10 +9,12 @@ var isUtf8 = require('is-utf8');
 var resolve = require('path').resolve;
 var plugins = require('tomasi-plugins');
 
-var tomasi = function(config, cb) {
-  if (cheque.isFunction(config)) {
-    cb = config;
-    config = 'tomasi.js';
+var tomasi = function(config) {
+  if (config == null) {
+    throw new Error('need config');
+  }
+  if (!(this instanceof tomasi)) {
+    return new tomasi(config);
   }
   if (cheque.isString(config)) {
     var cwd = process.cwd();
@@ -20,19 +22,21 @@ var tomasi = function(config, cb) {
     if (!fs.existsSync(configFile)) {
       throw new Error('could not find the file ' + config + ' in ' + cwd);
     }
-    config = require(configFile)(plugins);
+    config = require(configFile);
+  }
+  if (cheque.isFunction(config)) {
+    config = config.bind(plugins)();
   }
   if (!cheque.isObject(config)) {
-    throw new Error('missing config');
+    throw new Error('config must be an object');
   }
-  if (!cheque.isFunction(cb)) {
-    throw new Error('missing callback');
-  }
+  this.config = normalizeConfig(config);
+};
+
+tomasi.prototype.build = function(cb) {
+  var config = this.config;
   _.waterfall({
-    normalizeConfig: function(cb) {
-      normalizeConfig(cb, config);
-    },
-    read: function(cb, config) {
+    read: function(cb) {
       read(cb, config);
     },
     pipe: function(cb, dataTypes) {
@@ -47,27 +51,25 @@ var tomasi = function(config, cb) {
   }, cb);
 };
 
-tomasi.plugins = plugins;
-
-var normalizeConfig = function(cb, config) {
-  cb(null, _.map(config, function(dataTypeConfig) {
-    if (!cheque.isObject(dataTypeConfig.out)) {
-      dataTypeConfig.out = {
-        $: dataTypeConfig.out
+var normalizeConfig = function(config) {
+  return _.map(config, function(dataTypeConfig) {
+    if (!cheque.isObject(dataTypeConfig.$out)) {
+      dataTypeConfig.$out = {
+        $: dataTypeConfig.$out
       };
     }
     return dataTypeConfig;
-  }));
+  });
 };
 
 var read = function(cb, config) {
   _.map(config, function(cb, dataTypeConfig) {
     _.waterfall({
       readFiles: function(cb) {
-        readFiles(cb, dataTypeConfig.in);
+        readFiles(cb, dataTypeConfig.$in);
       },
       clone: function(cb, files) {
-        cb(null, _.map(dataTypeConfig.out, function() {
+        cb(null, _.map(dataTypeConfig.$out, function() {
           return clone(files);
         }));
       }
@@ -112,7 +114,7 @@ var pipe = function(cb, dataTypes, config, i) {
   var done = true;
   _.each(dataTypes, function(cb, dataType, dataTypeName) {
     _.each(dataType, function(cb, files, viewName) {
-      var fns = config[dataTypeName].out[viewName][i];
+      var fns = config[dataTypeName].$out[viewName][i];
       fns = [].concat(fns).filter(Boolean);
       if (!fns.length) {
         return cb();

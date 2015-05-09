@@ -4,14 +4,71 @@
 
 var tomasi = require('..');
 
-var error = function(err) {
-  console.error(err);
-  process.exit(1);
+var _ = require('savoy');
+var dateformat = require('dateformat');
+var gaze = require('gaze');
+var nopt = require('nopt');
+
+var log = function(msg) {
+  var time = dateformat(new Date(), 'HH:MM:ss');
+  console.log('tomasi · ' + time + ' · ' + msg);
 };
 
-tomasi('tomasi.js', function(err) {
+var cb = function(err) {
   if (err) {
-    return error(err);
+    log('error');
+    console.error(err);
+    process.exit(1);
+    return;
   }
-  process.exit(0);
+  log('done');
+};
+
+var noop = function() {};
+
+var build = function(t, cb) {
+  cb = cb || noop;
+  log('building...');
+  t.build(function(err) {
+    if (err) {
+      log('error');
+      console.error(err);
+      process.exit(1);
+      return;
+    }
+    log('done');
+    cb();
+  });
+};
+
+try {
+  var t = tomasi('tomasi.js');
+} catch (err) {
+  cb(err);
+}
+
+var argv = nopt({
+  watch: Boolean
 });
+
+if (argv.watch) {
+  var inPaths = _.fold(t.config, [], function(acc, dataTypes) {
+    acc.push(dataTypes.$in);
+    return acc;
+  });
+  var watchMsg = 'watching...';
+  gaze(inPaths, function(err, watcher) {
+    log(watchMsg);
+    if (err) {
+      return cb(err);
+    }
+    watcher.on('all', function(event) {
+      log('file ' + event);
+      build(t, function() {
+        log(watchMsg);
+      });
+    });
+  });
+} else {
+  build(t);
+}

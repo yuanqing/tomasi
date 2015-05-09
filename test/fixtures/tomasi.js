@@ -1,14 +1,14 @@
 'use strict';
 
 var join = require('path').join;
-var inPath = join(__dirname, '*.txt');
+var $in = join(__dirname, '*.txt');
 
 module.exports = function() {
 
   return {
     blog: {
-      in: inPath,
-      out: {
+      $in: $in,
+      $out: {
         single: []
       }
     }
