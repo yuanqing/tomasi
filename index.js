@@ -124,7 +124,7 @@ var pipe = function(cb, dataTypes, config, i) {
       done = false;
       _.eachSeries(fns, function(cb, fn) {
         fn(function(err, result) {
-          if (typeof result !== 'undefined') {
+          if (!cheque.isUndefined(result)) {
             dataType[viewName] = result;
           }
           cb(err);
