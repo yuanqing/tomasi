@@ -33,8 +33,8 @@ var tomasi = function(config, cb) {
     throw new Error('missing callback');
   }
   _.waterfall({
-    normalise: function(cb) {
-      normalise(cb, config);
+    normalizeConfig: function(cb) {
+      normalizeConfig(cb, config);
     },
     read: function(cb, config) {
       read(cb, config);
@@ -53,7 +53,7 @@ var tomasi = function(config, cb) {
 
 tomasi.plugins = plugins;
 
-var normalise = function(cb, config) {
+var normalizeConfig = function(cb, config) {
   cb(null, _.map(config, function(dataTypeConfig) {
     if (!cheque.isObject(dataTypeConfig.out)) {
       dataTypeConfig.out = {
