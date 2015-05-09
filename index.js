@@ -6,7 +6,7 @@ var clone = require('clone');
 var fs = require('fs');
 var glob = require('glob');
 var isUtf8 = require('is-utf8');
-var path = require('path');
+var resolve = require('path').resolve;
 var plugins = require('tomasi-plugins');
 
 var tomasi = function(config, cb) {
@@ -16,15 +16,11 @@ var tomasi = function(config, cb) {
   }
   if (cheque.isString(config)) {
     var cwd = process.cwd();
-    var configFile = path.resolve(cwd, config);
+    var configFile = resolve(cwd, config);
     if (!fs.existsSync(configFile)) {
       throw new Error('could not find the file ' + config + ' in ' + cwd);
     }
     config = require(configFile)(plugins);
-    var dirName = path.dirname(configFile);
-    _.each(config, function(dataTypes) {
-      dataTypes.in = path.join(dirName, dataTypes.in);
-    });
   }
   if (!cheque.isObject(config)) {
     throw new Error('missing config');
