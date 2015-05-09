@@ -57,6 +57,11 @@ test('throws if `configFile` does not exist', function(t) {
   t.end();
 });
 
+test('exposes `tomasi-plugins` on `.plugins`', function(t) {
+  t.equal(tomasi.plugins, require('tomasi-plugins'));
+  t.end();
+});
+
 test('calls `cb` with an `err` if no files match an `in` pattern',
     function(t) {
   var calls = [];

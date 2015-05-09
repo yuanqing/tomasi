@@ -47,6 +47,8 @@ var tomasi = function(config, cb) {
   }, cb);
 };
 
+tomasi.plugins = plugins;
+
 var normalise = function(cb, config) {
   cb(null, _.map(config, function(dataTypeConfig) {
     if (!cheque.isObject(dataTypeConfig.out)) {
