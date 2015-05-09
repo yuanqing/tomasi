@@ -4,26 +4,61 @@ var tomasi = require('..');
 
 var bufferEqual = require('buffer-equal');
 var fs = require('fs');
+var join = require('path').join;
 var test = require('tape');
 
-var inDir = __dirname + '/fixtures/';
+var fixturesDir = join(__dirname, 'fixtures/');
+var configFile = join(fixturesDir, 'tomasi.js');
 
 test('is a function', function(t) {
   t.equal(typeof tomasi, 'function');
   t.end();
 });
 
-test('throws if no `config` or `cb`', function(t) {
+test('throws if no arguments', function(t) {
   t.throws(function() {
     tomasi();
-  });
-  t.throws(function() {
-    tomasi({});
   });
   t.end();
 });
 
-test('calls `cb` with an `err` if no files match an `in` pattern', function(t) {
+test('throws if no `cb`', function(t) {
+  t.throws(function() {
+    tomasi({});
+  });
+  t.throws(function() {
+    t.true(fs.existsSync(configFile));
+    tomasi(configFile);
+  });
+  t.end();
+});
+
+test('throws if `cb` is not a function', function(t) {
+  t.throws(function() {
+    tomasi({}, {});
+  });
+  t.throws(function() {
+    t.true(fs.existsSync(configFile));
+    tomasi(configFile, {});
+  });
+  t.end();
+});
+
+test('throws if `configFile` does not exist', function(t) {
+  var cb = function() {};
+  t.throws(function() {
+    t.false(fs.existsSync('tomasi.js'));
+    tomasi(cb);
+  });
+  t.throws(function() {
+    t.false(fs.existsSync('invalid'));
+    tomasi('invalid', cb);
+  });
+  t.end();
+});
+
+test('calls `cb` with an `err` if no files match an `in` pattern',
+    function(t) {
   var calls = [];
   var x = function(cb) {
     calls.push(1);
@@ -31,7 +66,7 @@ test('calls `cb` with an `err` if no files match an `in` pattern', function(t) {
   };
   var config = {
     blog: {
-      in: 'invalid/*.txt',
+      in: join('invalid', '*.txt'),
       out: {
         post: [
           [ x ],
@@ -47,14 +82,26 @@ test('calls `cb` with an `err` if no files match an `in` pattern', function(t) {
   });
 });
 
+test('uses settings in the given `configFile`', function(t) {
+  tomasi(configFile, function(err, dataTypes) {
+    t.false(err);
+    t.looseEquals(dataTypes.blog.single, [
+      { $inPath: join(fixturesDir, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(fixturesDir, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(fixturesDir, '3-baz.txt'), $content: 'baz' }
+    ]);
+    t.end();
+  });
+});
+
 test('can read utf8 files', function(t) {
   var calls = [];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
     var expectedFiles = [
-      { $inPath: inDir + '1-foo.txt', $content: 'foo' },
-      { $inPath: inDir + '2-bar.txt', $content: 'bar' },
-      { $inPath: inDir + '3-baz.txt', $content: 'baz' }
+      { $inPath: join(fixturesDir, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(fixturesDir, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(fixturesDir, '3-baz.txt'), $content: 'baz' }
     ];
     var expectedDataTypes = {
       blog: {
@@ -71,7 +118,7 @@ test('can read utf8 files', function(t) {
   };
   var config = {
     blog: {
-      in: inDir + '*.txt',
+      in: join(fixturesDir, '*.txt'),
       out: {
         single: [
           [ x ]
@@ -81,16 +128,16 @@ test('can read utf8 files', function(t) {
   };
   tomasi(config, function(err) {
     t.false(err);
-    t.looseEquals(calls, [1]);
+    t.looseEquals(calls, [ 1 ]);
     t.end();
   });
 });
 
-test('can read not-utf8 files', function(t) {
+test('can read non-utf8 files', function(t) {
   var calls = [];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
-    var inFile = inDir + 'heart.png';
+    var inFile = join(fixturesDir, 'heart.png');
     var img = fs.readFileSync(inFile);
     t.equal(arguments.length, 5);
     t.equal(files.length, 1);
@@ -103,7 +150,7 @@ test('can read not-utf8 files', function(t) {
   };
   var config = {
     images: {
-      in: inDir + '*.png',
+      in: join(fixturesDir, '*.png'),
       out: {
         single: [
           [ x ]
@@ -113,7 +160,7 @@ test('can read not-utf8 files', function(t) {
   };
   tomasi(config, function(err) {
     t.false(err);
-    t.looseEquals(calls, [1]);
+    t.looseEquals(calls, [ 1 ]);
     t.end();
   });
 });
@@ -123,9 +170,9 @@ test('if not specified, `viewName` defaults to "$"', function(t) {
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
     var expectedFiles = [
-      { $inPath: inDir + '1-foo.txt', $content: 'foo' },
-      { $inPath: inDir + '2-bar.txt', $content: 'bar' },
-      { $inPath: inDir + '3-baz.txt', $content: 'baz' }
+      { $inPath: join(fixturesDir, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(fixturesDir, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(fixturesDir, '3-baz.txt'), $content: 'baz' }
     ];
     var expectedDataTypes = {
       blog: {
@@ -142,13 +189,13 @@ test('if not specified, `viewName` defaults to "$"', function(t) {
   };
   var config = {
     blog: {
-      in: inDir + '*.txt',
+      in: join(fixturesDir, '*.txt'),
       out: [ x ]
     }
   };
   tomasi(config, function(err) {
     t.false(err);
-    t.looseEquals(calls, [1]);
+    t.looseEquals(calls, [ 1 ]);
     t.end();
   });
 });
@@ -173,7 +220,7 @@ test('calls plugins in a single pipeline in series', function(t) {
   };
   var config = {
     blog: {
-      in: inDir + '*.txt',
+      in: join(fixturesDir, '*.txt'),
       out: {
         single: [
           [ x, y ]
@@ -183,7 +230,7 @@ test('calls plugins in a single pipeline in series', function(t) {
   };
   tomasi(config, function(err) {
     t.false(err);
-    t.looseEquals(calls, [1, 2, 3, 4]);
+    t.looseEquals(calls, [ 1, 2, 3, 4 ]);
     t.end();
   });
 });
@@ -208,7 +255,7 @@ test('calls plugins in adjoining pipelines in series', function(t) {
   };
   var config = {
     blog: {
-      in: inDir + '*.txt',
+      in: join(fixturesDir, '*.txt'),
       out: {
         single: [
           [ x ],
@@ -219,7 +266,7 @@ test('calls plugins in adjoining pipelines in series', function(t) {
   };
   tomasi(config, function(err) {
     t.false(err);
-    t.looseEquals(calls, [1, 2, 3, 4]);
+    t.looseEquals(calls, [ 1, 2, 3, 4 ]);
     t.end();
   });
 });
@@ -249,7 +296,7 @@ test('calls plugins in parallel pipelines in parallel', function(t) {
   };
   var config = {
     blog: {
-      in: inDir + '*.txt',
+      in: join(fixturesDir, '*.txt'),
       out: {
         single: [
           [ x ],
@@ -263,7 +310,7 @@ test('calls plugins in parallel pipelines in parallel', function(t) {
   };
   tomasi(config, function(err) {
     t.false(err);
-    t.looseEquals(calls, [1, 2, 3, 4, 5, 6]);
+    t.looseEquals(calls, [ 1, 2, 3, 4, 5, 6 ]);
     t.end();
   });
 });

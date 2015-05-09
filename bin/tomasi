@@ -3,24 +3,13 @@
 'use strict';
 
 var tomasi = require('..');
-var plugins = require('tomasi-plugins');
-var exists = require('fs').existsSync;
-var resolve = require('path').resolve;
-
-var cwd = process.cwd();
 
 var error = function(err) {
   console.error(err);
   process.exit(1);
 };
 
-var configFile = resolve(cwd, 'tomasi.js');
-if (!exists(configFile)) {
-  error('could not find a tomasi.js file in ' + cwd);
-}
-
-var config = require(configFile);
-tomasi(config(plugins), function(err) {
+tomasi('tomasi.js', function(err) {
   if (err) {
     return error(err);
   }

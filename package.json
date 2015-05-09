@@ -12,10 +12,10 @@
     "tomasi": "bin/tomasi"
   },
   "dependencies": {
+    "cheque": "^0.2.1",
     "clone": "^0.2.0",
     "glob": "^4.3.2",
     "is-utf8": "^0.2.0",
-    "lodash.isplainobject": "^2.4.1",
     "savoy": "^0.3.0",
     "tomasi-plugins": "*"
   },

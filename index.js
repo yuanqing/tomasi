@@ -1,17 +1,31 @@
 'use strict';
 
 var _ = require('savoy');
+var cheque = require('cheque');
 var clone = require('clone');
 var fs = require('fs');
 var glob = require('glob');
-var isObject = require('lodash.isplainobject');
 var isUtf8 = require('is-utf8');
+var plugins = require('tomasi-plugins');
+var resolve = require('path').resolve;
 
 var tomasi = function(config, cb) {
-  if (!isObject(config)) {
+  if (cheque.isFunction(config)) {
+    cb = config;
+    config = 'tomasi.js';
+  }
+  if (cheque.isString(config)) {
+    var cwd = process.cwd();
+    var configFile = resolve(cwd, config);
+    if (!fs.existsSync(configFile)) {
+      throw new Error('could not find the file ' + config + ' in ' + cwd);
+    }
+    config = require(configFile)(plugins);
+  }
+  if (!cheque.isObject(config)) {
     throw new Error('missing config');
   }
-  if (typeof cb !== 'function') {
+  if (!cheque.isFunction(cb)) {
     throw new Error('missing callback');
   }
   _.waterfall({
@@ -35,7 +49,7 @@ var tomasi = function(config, cb) {
 
 var normalise = function(cb, config) {
   cb(null, _.map(config, function(dataTypeConfig) {
-    if (!isObject(dataTypeConfig.out)) {
+    if (!cheque.isObject(dataTypeConfig.out)) {
       dataTypeConfig.out = {
         $: dataTypeConfig.out
       };
