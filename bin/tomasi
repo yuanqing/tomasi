@@ -10,33 +10,23 @@ var gaze = require('gaze');
 var nopt = require('nopt');
 
 var log = function(msg) {
-  var time = dateformat(new Date(), 'HH:MM:ss');
+  var time = dateformat('HH:MM:ss');
   console.log('tomasi · ' + time + ' · ' + msg);
 };
 
-var cb = function(err) {
-  if (err) {
-    log('error');
-    console.error(err);
-    process.exit(1);
-    return;
-  }
-  log('done');
+var errCb = function(err) {
+  log(err);
+  process.exit(1);
 };
 
 var noop = function() {};
 
 var build = function(t, cb) {
   cb = cb || noop;
-  log('building...');
+  log('Building...');
   t.build(function(err) {
-    if (err) {
-      log('error');
-      console.error(err);
-      process.exit(1);
-      return;
-    }
-    log('done');
+    if (err) return cb(err);
+    log('Done');
     cb();
   });
 };
@@ -44,31 +34,30 @@ var build = function(t, cb) {
 try {
   var t = tomasi('tomasi.js');
 } catch (err) {
-  cb(err);
+  return errCb(err);
 }
 
-var argv = nopt({
-  watch: Boolean
-});
-
-if (argv.watch) {
-  var inPaths = _.fold(t.config, [], function(acc, dataTypes) {
-    acc.push(dataTypes.$in);
-    return acc;
+build(t, function(err) {
+  if (err) return errCb(err);
+  var argv = nopt({
+    watch: Boolean
   });
-  var watchMsg = 'watching...';
-  gaze(inPaths, function(err, watcher) {
-    log(watchMsg);
-    if (err) {
-      return cb(err);
-    }
-    watcher.on('all', function(event) {
-      log('file ' + event);
-      build(t, function() {
-        log(watchMsg);
+  if (argv.watch) {
+    var inPaths = _.fold(t.config, [], function(acc, dataTypes) {
+      acc.push(dataTypes.$in);
+      return acc;
+    });
+    var watchMsg = 'Watching...';
+    gaze(inPaths, function(err, watcher) {
+      if (err) return errCb(err);
+      log(watchMsg);
+      watcher.on('all', function(event) {
+        log('file ' + event);
+        build(t, function(err) {
+          if (err) return errCb(err);
+          log(watchMsg);
+        });
       });
     });
-  });
-} else {
-  build(t);
-}
+  }
+});
