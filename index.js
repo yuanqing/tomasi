@@ -83,13 +83,13 @@ var readFiles = function(cb, pattern) {
   _.waterfall({
     glob: function(cb) {
       glob(pattern, function(err, filenames) {
+        if (filenames.length === 0) {
+          return cb('no files match the pattern ' + pattern);
+        }
         cb(err, filenames);
       });
     },
     readFile: function(cb, filenames) {
-      if (filenames.length === 0) {
-        return cb('no files match the pattern ' + pattern);
-      }
       _.map(filenames, function(cb, filename) {
         readFile(cb, filename);
       }, function(err, files) {
