@@ -31,28 +31,34 @@ var build = function(t, cb) {
   });
 };
 
+var opts = nopt({
+  watch: Boolean
+});
+var remain = opts.argv.remain;
+var config = 'tomasi.js';
+if (remain && remain[0]) {
+  config = remain[0];
+}
+
 try {
-  var t = tomasi('tomasi.js');
+  var t = tomasi(config);
 } catch (err) {
   return errCb(err);
 }
 
 build(t, function(err) {
   if (err) return errCb(err);
-  var argv = nopt({
-    watch: Boolean
-  });
-  if (argv.watch) {
+  if (opts.watch) {
     var inPaths = _.fold(t.config, [], function(acc, dataTypes) {
       acc.push(dataTypes.$in);
       return acc;
     });
-    var watchMsg = 'Watching...';
     gaze(inPaths, function(err, watcher) {
       if (err) return errCb(err);
+      var watchMsg = 'Watching...';
       log(watchMsg);
       watcher.on('all', function(event) {
-        log('file ' + event);
+        log('File ' + event);
         build(t, function(err) {
           if (err) return errCb(err);
           log(watchMsg);
