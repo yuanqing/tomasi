@@ -9,6 +9,7 @@ var test = require('tape');
 
 var RELATIVE_PATH = path.relative(process.cwd(), __dirname);
 var FIXTURES_DIR = join(RELATIVE_PATH, 'fixtures');
+var FIXTURES_ABS_DIR = join(__dirname, 'fixtures');
 
 test('is a function', function(t) {
   t.equal(typeof tomasi, 'function');
@@ -395,15 +396,14 @@ test('runs parallel `$view` pipelines in parallel', function(t) {
 });
 
 test('uses settings in the specified `config` file', function(t) {
-  var config = join(FIXTURES_DIR, 'tomasi.js');
+  var config = join(FIXTURES_ABS_DIR, 'tomasi.js');
   t.true(fs.existsSync(config));
   tomasi(config).build(function(err, dataTypes) {
     t.false(err);
-    var absoluteDir = join(__dirname, 'fixtures');
     t.looseEquals(dataTypes.blog, [
-      { $inPath: join(absoluteDir, '1-foo.txt'), $content: 'foo' },
-      { $inPath: join(absoluteDir, '2-bar.txt'), $content: 'bar' },
-      { $inPath: join(absoluteDir, '3-baz.txt'), $content: 'baz' }
+      { $inPath: join(FIXTURES_ABS_DIR, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(FIXTURES_ABS_DIR, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(FIXTURES_ABS_DIR, '3-baz.txt'), $content: 'baz' }
     ]);
     t.end();
   });
@@ -416,6 +416,28 @@ test('throws if the specified `config` file does not exist', function(t) {
     tomasi(config);
   });
   t.end();
+});
+
+test('prepends `$dirs.$inDir` to each `$inPath`', function(t) {
+  var config = {
+    $dirs: {
+      $inDir: FIXTURES_ABS_DIR
+    },
+    $dataTypes: {
+      blog: {
+        $inPath: '*.txt'
+      }
+    }
+  };
+  tomasi(config).build(function(err, dataTypes) {
+    t.false(err);
+    t.looseEquals(dataTypes.blog, [
+      { $inPath: join(FIXTURES_ABS_DIR, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(FIXTURES_ABS_DIR, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(FIXTURES_ABS_DIR, '3-baz.txt'), $content: 'baz' }
+    ]);
+    t.end();
+  });
 });
 
 test('can handle non-utf8 files', function(t) {
@@ -468,3 +490,4 @@ test('can handle non-utf8 files', function(t) {
     t.end();
   });
 });
+
