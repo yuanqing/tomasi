@@ -12,10 +12,7 @@ var tomasiPlugins = require('tomasi-plugins');
 var tomasi = function(config) {
 
   if (config == null) {
-    config = 'tomasi.js';
-  }
-  if (!(this instanceof tomasi)) {
-    return new tomasi(config);
+    throw new Error('missing config');
   }
   if (cheque.isString(config)) {
     var cwd = process.cwd();
@@ -67,7 +64,7 @@ var tomasi = function(config) {
     _.map(config, function(cb, dataTypeConfig) {
       _.waterfall({
         globFiles: function(cb) {
-          globFiles(cb, dataTypeConfig.$in);
+          globFiles(cb, dataTypeConfig.$inPath);
         },
         readFiles: function(cb, filenames) {
           readFiles(cb, filenames);
@@ -153,6 +150,7 @@ var tomasi = function(config) {
     var done = true;
     _.each(dataTypes, function(cb, dataType, dataTypeName) {
       _.each(dataType, function(cb, files, viewName) {
+        // exit if no `$views`
         if (config[dataTypeName].$views == null) {
           return cb();
         }

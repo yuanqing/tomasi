@@ -1,17 +1,14 @@
 'use strict';
 
-var path = require('path');
+var join = require('path').join;
 
-var pattern = path.join(__dirname, '*.txt');
+var pattern = join(__dirname, '*.txt');
 
 module.exports = function() {
 
   return {
     blog: {
-      $in: pattern,
-      $views: {
-        single: []
-      }
+      $inPath: pattern
     }
   };
 
