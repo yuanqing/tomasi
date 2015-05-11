@@ -6,7 +6,7 @@ var clone = require('clone');
 var fs = require('fs');
 var glob = require('glob');
 var isUtf8 = require('is-utf8');
-var path = require('path');
+var resolve = require('path').resolve;
 var tomasiPlugins = require('tomasi-plugins');
 
 var tomasi = function(config) {
@@ -14,36 +14,42 @@ var tomasi = function(config) {
   if (config == null) {
     throw new Error('missing config');
   }
+
   if (cheque.isString(config)) {
+    // Resolve the path to the `config` file, and `require` it.
     var cwd = process.cwd();
-    var configFile = path.resolve(cwd, config);
+    var configFile = resolve(cwd, config);
     if (!fs.existsSync(configFile)) {
       throw new Error('could not find the file ' + config + ' in ' + cwd);
     }
     config = require(configFile);
   }
+
   if (cheque.isFunction(config)) {
     config = config.bind(tomasiPlugins)();
   }
+
   if (!cheque.isObject(config)) {
     throw new Error('config must be an object');
   }
 
-  // PIPE
-
-  var pipe = function(cb, fns, dataTypes, dataTypeName, viewName) {
-    _.eachSeries(fns, function(cb, fn) {
+  // Pipe files through each plugin in `plugins`. This is called by the
+  // `preProcess` and `postProcessIteration` functions.
+  var pipe = function(cb, plugins, dataTypes, dataTypeName, viewName) {
+    _.eachSeries(plugins, function(cb, plugin) {
       var files;
+      // `viewName` will be `null` if we are in a `$preProcess` pipeline.
       if (viewName === null) {
         files = dataTypes[dataTypeName];
       } else {
         files = dataTypes[dataTypeName][viewName];
       }
-      fn(function(err, files) {
+      plugin(function(err, files) {
         if (err) {
           return cb(err);
         }
-        // `cb` can called without arguments
+        // The plugin's `cb` may be called without the `files` argument. Only
+        // update `dataTypes` if `files` is set.
         if (!cheque.isUndefined(files)) {
           if (viewName === null) {
             dataTypes[dataTypeName] = files;
@@ -59,6 +65,10 @@ var tomasi = function(config) {
   };
 
   // READ
+  //
+  // For each data type, glob files based on its `$inPath`, and read the
+  // contents of the matched files. Each array of files is keyed on the name
+  // of the data type. `cb` is called with the resulting `dataTypes` object.
 
   var read = function(cb) {
     _.map(config, function(cb, dataTypeConfig) {
@@ -104,6 +114,10 @@ var tomasi = function(config) {
   };
 
   // PRE-PROCESS
+  //
+  // For each data type, pipe its files through its `$preProcess` pipeline.
+  // `cb` is called with the resulting `dataTypes` object. The structure of
+  // `dataTypes` is unchanged.
 
   var preProcess = function(cb, dataTypes) {
     _.each(config, function(cb, dataTypeConfig, dataTypeName) {
@@ -119,6 +133,11 @@ var tomasi = function(config) {
   };
 
   // COPY
+  //
+  // For each data type, make a copy of its files for each of its views. Each
+  // copy is keyed on the name of the view. If a data type has no views, its
+  // files are not copied, and remain keyed on the name of the data type.
+  // `cb` is called with the resulting `dataTypes` object.
 
   var copy = function(cb, dataTypes) {
     _.map(config, function(cb, dataTypeConfig, dataTypeName) {
@@ -127,6 +146,7 @@ var tomasi = function(config) {
           return clone(dataTypes[dataTypeName]);
         }));
       } else {
+        // Exit if the data type has no views.
         cb(null, dataTypes[dataTypeName]);
       }
     }, function(err, dataTypes) {
@@ -135,22 +155,25 @@ var tomasi = function(config) {
   };
 
   // POST-PROCESS
+  //
+  // For each data type, pipe the files for each of its views through its
+  // `$views` pipeline(s).
 
   var postProcess = function(cb, dataTypes) {
     var cbWrap = function(err, i) {
       if (err || i === true) {
         return cb(err, dataTypes);
       }
-      postProcessPipe(cbWrap, dataTypes, i);
+      postProcessIteration(cbWrap, dataTypes, i);
     };
     cbWrap(null, 0);
   };
 
-  var postProcessPipe = function(cb, dataTypes, i) {
+  var postProcessIteration = function(cb, dataTypes, i) {
     var done = true;
     _.each(dataTypes, function(cb, dataType, dataTypeName) {
       _.each(dataType, function(cb, files, viewName) {
-        // exit if no `$views`
+        // Exit if no `$views`.
         if (config[dataTypeName].$views == null) {
           return cb();
         }
