@@ -42,7 +42,7 @@ var tomasi = function(config) {
   config.$dirs = config.$dirs || {
     $inDir: '.',
     $outDir: 'out',
-    $tmplDir: 'tmpl'
+    $tmplDir: '.'
   };
 
   // Pipe files through each plugin in `plugins`. This is called by the
@@ -86,8 +86,8 @@ var tomasi = function(config) {
     _.map(config.$dataTypes, function(cb, dataTypeConfig) {
       _.waterfall({
         globFiles: function(cb) {
-          // Only add the `config.$dirs.$inDir` prefix if `pattern` is a
-          // relative path.
+          // Prepend `config.$dirs.$inDir` to `pattern` if and only if
+          // `pattern` is a relative path.
           var pattern = dataTypeConfig.$inPath;
           if (isRelative(pattern)) {
             pattern = path.join(config.$dirs.$inDir, pattern);
