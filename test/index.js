@@ -263,8 +263,8 @@ test('runs consecutive `$view` pipelines in series', function(t) {
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
-    t.equals(files, ['kanade']);
-    t.equals(dataTypes.blog.single, ['kanade']);
+    t.deepEquals(files, ['kanade']);
+    t.deepEquals(dataTypes.blog.single, ['kanade']);
     cb();
   };
   var inPath = join(FIXTURES_DIR, '*.txt');
