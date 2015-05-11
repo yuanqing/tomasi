@@ -14,13 +14,6 @@ test('is a function', function(t) {
   t.end();
 });
 
-test('throws if no `config`', function(t) {
-  t.throws(function() {
-    tomasi();
-  });
-  t.end();
-});
-
 test('throws if `config` is not a string, function, or object', function(t) {
   t.throws(function() {
     tomasi([]);
@@ -35,6 +28,22 @@ test('throws if `config` file does not exist', function(t) {
     tomasi(config);
   });
   t.end();
+});
+
+test('uses settings in `tomasi.js`', function(t) {
+  var prevDir = process.cwd();
+  process.chdir(fixturesDir);
+  t.true(fs.existsSync('tomasi.js'));
+  tomasi().build(function(err, dataTypes) {
+    t.false(err);
+    t.looseEquals(dataTypes.blog.single, [
+      { $inPath: join(fixturesDir, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(fixturesDir, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(fixturesDir, '3-baz.txt'), $content: 'baz' }
+    ]);
+    process.chdir(prevDir);
+    t.end();
+  });
 });
 
 test('uses settings in the given `config` file', function(t) {
@@ -61,7 +70,7 @@ test('calls `cb` with an `err` if no files match an `in` pattern',
   var config = {
     blog: {
       $in: join('invalid', '*.txt'),
-      $out: {
+      $views: {
         post: [
           [ x ],
         ]
@@ -101,7 +110,7 @@ test('can read utf8 files', function(t) {
   var config = {
     blog: {
       $in: join(fixturesDir, '*.txt'),
-      $out: {
+      $views: {
         single: [
           [ x ]
         ]
@@ -133,7 +142,7 @@ test('can read non-utf8 files', function(t) {
   var config = {
     images: {
       $in: join(fixturesDir, '*.png'),
-      $out: {
+      $views: {
         single: [
           [ x ]
         ]
@@ -147,7 +156,7 @@ test('can read non-utf8 files', function(t) {
   });
 });
 
-test('if not specified, `viewName` defaults to "$"', function(t) {
+test('calls plugins in $preProcess pipelines in parallel', function(t) {
   var calls = [];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
@@ -157,22 +166,20 @@ test('if not specified, `viewName` defaults to "$"', function(t) {
       { $inPath: join(fixturesDir, '3-baz.txt'), $content: 'baz' }
     ];
     var expectedDataTypes = {
-      blog: {
-        $: expectedFiles
-      }
+      blog: expectedFiles
     };
     t.equal(arguments.length, 5);
     t.deepEqual(files, expectedFiles);
     t.equal(dataTypeName, 'blog');
-    t.equal(viewName, '$');
+    t.equal(viewName, null);
     t.deepEqual(dataTypes, expectedDataTypes);
-    t.equal(files, dataTypes.blog.$);
+    t.equal(files, dataTypes.blog);
     cb();
   };
   var config = {
     blog: {
       $in: join(fixturesDir, '*.txt'),
-      $out: [ x ]
+      $preProcess: [ x ]
     }
   };
   tomasi(config).build(function(err) {
@@ -203,7 +210,7 @@ test('calls plugins in a single pipeline in series', function(t) {
   var config = {
     blog: {
       $in: join(fixturesDir, '*.txt'),
-      $out: {
+      $views: {
         single: [
           [ x, y ]
         ]
@@ -238,7 +245,7 @@ test('calls plugins in adjoining pipelines in series', function(t) {
   var config = {
     blog: {
       $in: join(fixturesDir, '*.txt'),
-      $out: {
+      $views: {
         single: [
           [ x ],
           [ y ]
@@ -279,7 +286,7 @@ test('calls plugins in parallel pipelines in parallel', function(t) {
   var config = {
     blog: {
       $in: join(fixturesDir, '*.txt'),
-      $out: {
+      $views: {
         single: [
           [ x ],
           [ y ]
