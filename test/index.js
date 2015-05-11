@@ -92,15 +92,15 @@ test('calls plugins in a single `$preProcess` pipeline in series', function(t) {
       blog: expectedFiles
     });
     t.true(files === dataTypes.blog);
-    cb(null, 'hello');
+    cb(null, ['kanade']);
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
     t.equal(arguments.length, 5);
-    t.deepEqual(files, 'hello');
+    t.deepEqual(files, ['kanade']);
     t.equal(dataTypeName, 'blog');
     t.equal(viewName, null);
-    t.deepEqual(dataTypes.blog, 'hello');
+    t.deepEqual(dataTypes.blog, ['kanade']);
     cb();
   };
   var inPath = join(FIXTURES_DIR, '*.txt');
@@ -198,12 +198,12 @@ test('calls plugins in a single `$view` pipeline in series', function(t) {
       }
     });
     t.true(files === dataTypes.blog.single);
-    cb(null, 'hello');
+    cb(null, ['kanade']);
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
-    t.equals(files, 'hello');
-    t.equals(dataTypes.blog.single, 'hello');
+    t.deepEquals(files, ['kanade']);
+    t.deepEquals(dataTypes.blog.single, ['kanade']);
     cb();
   };
   var config = {
@@ -259,12 +259,12 @@ test('runs consecutive `$view` pipelines in series', function(t) {
   var calls = [];
   var x = function(cb) {
     calls.push(1);
-    cb(null, 'hello');
+    cb(null, ['kanade']);
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
-    t.equals(files, 'hello');
-    t.equals(dataTypes.blog.single, 'hello');
+    t.equals(files, ['kanade']);
+    t.equals(dataTypes.blog.single, ['kanade']);
     cb();
   };
   var inPath = join(FIXTURES_DIR, '*.txt');
