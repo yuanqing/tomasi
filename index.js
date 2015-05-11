@@ -5,8 +5,9 @@ var cheque = require('cheque');
 var clone = require('clone');
 var fs = require('fs');
 var glob = require('glob');
+var isRelative = require('is-relative');
 var isUtf8 = require('is-utf8');
-var resolve = require('path').resolve;
+var path = require('path');
 var tomasiPlugins = require('tomasi-plugins');
 
 var tomasi = function(config) {
@@ -18,7 +19,7 @@ var tomasi = function(config) {
   if (cheque.isString(config)) {
     // Resolve the path to the `config` file, and `require` it.
     var cwd = process.cwd();
-    var configFile = resolve(cwd, config);
+    var configFile = path.resolve(cwd, config);
     if (!fs.existsSync(configFile)) {
       throw new Error('could not find the file ' + config + ' in ' + cwd);
     }
@@ -32,6 +33,17 @@ var tomasi = function(config) {
   if (!cheque.isObject(config)) {
     throw new Error('config must be an object');
   }
+
+  if (config.$dataTypes == null) {
+    config = {
+      $dataTypes: config
+    };
+  }
+  config.$dirs = config.$dirs || {
+    $inDir: '.',
+    $outDir: 'out',
+    $tmplDir: 'tmpl'
+  };
 
   // Pipe files through each plugin in `plugins`. This is called by the
   // `preProcess` and `postProcessIteration` functions.
@@ -58,7 +70,7 @@ var tomasi = function(config) {
           }
         }
         cb(err);
-      }, files, dataTypeName, viewName, dataTypes);
+      }, files, dataTypeName, viewName, dataTypes, config);
     }, function(err) {
       cb(err);
     });
@@ -71,10 +83,16 @@ var tomasi = function(config) {
   // of the data type. `cb` is called with the resulting `dataTypes` object.
 
   var read = function(cb) {
-    _.map(config, function(cb, dataTypeConfig) {
+    _.map(config.$dataTypes, function(cb, dataTypeConfig) {
       _.waterfall({
         globFiles: function(cb) {
-          globFiles(cb, dataTypeConfig.$inPath);
+          // Only add the `config.$dirs.$inDir` prefix if `pattern` is a
+          // relative path.
+          var pattern = dataTypeConfig.$inPath;
+          if (isRelative(pattern)) {
+            pattern = path.join(config.$dirs.$inDir, pattern);
+          }
+          globFiles(cb, pattern);
         },
         readFiles: function(cb, filenames) {
           readFiles(cb, filenames);
@@ -120,7 +138,7 @@ var tomasi = function(config) {
   // `dataTypes` is unchanged.
 
   var preProcess = function(cb, dataTypes) {
-    _.each(config, function(cb, dataTypeConfig, dataTypeName) {
+    _.each(config.$dataTypes, function(cb, dataTypeConfig, dataTypeName) {
       var fns = dataTypeConfig.$preProcess;
       fns = [].concat(fns).filter(Boolean);
       if (fns.length === 0) {
@@ -140,7 +158,7 @@ var tomasi = function(config) {
   // `cb` is called with the resulting `dataTypes` object.
 
   var copy = function(cb, dataTypes) {
-    _.map(config, function(cb, dataTypeConfig, dataTypeName) {
+    _.map(config.$dataTypes, function(cb, dataTypeConfig, dataTypeName) {
       if (dataTypeConfig.$views) {
         cb(null, _.map(dataTypeConfig.$views, function() {
           return clone(dataTypes[dataTypeName]);
@@ -173,11 +191,12 @@ var tomasi = function(config) {
     var done = true;
     _.each(dataTypes, function(cb, dataType, dataTypeName) {
       _.each(dataType, function(cb, files, viewName) {
+        var dataTypeConfig = config.$dataTypes;
         // Exit if no `$views`.
-        if (config[dataTypeName].$views == null) {
+        if (dataTypeConfig[dataTypeName].$views == null) {
           return cb();
         }
-        var fns = config[dataTypeName].$views[viewName][i];
+        var fns = dataTypeConfig[dataTypeName].$views[viewName][i];
         fns = [].concat(fns).filter(Boolean);
         if (fns.length === 0) {
           return cb();

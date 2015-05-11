@@ -2,13 +2,13 @@
 
 var join = require('path').join;
 
-var pattern = join(__dirname, '*.txt');
+var inPath = join(__dirname, '*.txt');
 
 module.exports = function() {
 
   return {
     blog: {
-      $inPath: pattern
+      $inPath: inPath
     }
   };
 

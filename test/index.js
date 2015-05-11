@@ -3,10 +3,12 @@
 var tomasi = require('..');
 
 var fs = require('fs');
-var join = require('path').join;
+var path = require('path');
+var join = path.join;
 var test = require('tape');
 
-var FIXTURES_DIR = join(__dirname, 'fixtures/');
+var RELATIVE_PATH = path.relative(process.cwd(), __dirname);
+var FIXTURES_DIR = join(RELATIVE_PATH, 'fixtures');
 
 test('is a function', function(t) {
   t.equal(typeof tomasi, 'function');
@@ -79,7 +81,7 @@ test('calls plugins in a single `$preProcess` pipeline in series', function(t) {
   var calls = [];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
-    t.equal(arguments.length, 5);
+    t.equal(arguments.length, 6);
     var expectedFiles = [
       { $inPath: join(FIXTURES_DIR, '1-foo.txt'), $content: 'foo' },
       { $inPath: join(FIXTURES_DIR, '2-bar.txt'), $content: 'bar' },
@@ -96,7 +98,7 @@ test('calls plugins in a single `$preProcess` pipeline in series', function(t) {
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
-    t.equal(arguments.length, 5);
+    t.equal(arguments.length, 6);
     t.deepEqual(files, ['tomasi']);
     t.equal(dataTypeName, 'blog');
     t.equal(viewName, null);
@@ -184,7 +186,7 @@ test('calls plugins in a single `$view` pipeline in series', function(t) {
   var calls = [];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
-    t.equal(arguments.length, 5);
+    t.equal(arguments.length, 6);
     var expectedFiles = [
       { $inPath: join(FIXTURES_DIR, '1-foo.txt'), $content: 'foo' },
       { $inPath: join(FIXTURES_DIR, '2-bar.txt'), $content: 'bar' },
@@ -203,7 +205,7 @@ test('calls plugins in a single `$view` pipeline in series', function(t) {
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
-    t.equal(arguments.length, 5);
+    t.equal(arguments.length, 6);
     var expectedFiles = ['tomasi'];
     t.deepEquals(files, expectedFiles);
     t.equal(dataTypeName, 'blog');
@@ -397,10 +399,11 @@ test('uses settings in the specified `config` file', function(t) {
   t.true(fs.existsSync(config));
   tomasi(config).build(function(err, dataTypes) {
     t.false(err);
+    var absoluteDir = join(__dirname, 'fixtures');
     t.looseEquals(dataTypes.blog, [
-      { $inPath: join(FIXTURES_DIR, '1-foo.txt'), $content: 'foo' },
-      { $inPath: join(FIXTURES_DIR, '2-bar.txt'), $content: 'bar' },
-      { $inPath: join(FIXTURES_DIR, '3-baz.txt'), $content: 'baz' }
+      { $inPath: join(absoluteDir, '1-foo.txt'), $content: 'foo' },
+      { $inPath: join(absoluteDir, '2-bar.txt'), $content: 'bar' },
+      { $inPath: join(absoluteDir, '3-baz.txt'), $content: 'baz' }
     ]);
     t.end();
   });
@@ -424,7 +427,7 @@ test('can handle non-utf8 files', function(t) {
   ];
   var x = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(1);
-    t.equal(arguments.length, 5);
+    t.equal(arguments.length, 6);
     t.deepEqual(files, expectedFiles);
     t.equal(dataTypeName, 'images');
     t.equal(viewName, null);
@@ -436,7 +439,7 @@ test('can handle non-utf8 files', function(t) {
   };
   var y = function(cb, files, dataTypeName, viewName, dataTypes) {
     calls.push(2);
-    t.equal(arguments.length, 5);
+    t.equal(arguments.length, 6);
     t.deepEqual(files, expectedFiles);
     t.equal(dataTypeName, 'images');
     t.equal(viewName, 'single');
