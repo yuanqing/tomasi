@@ -493,24 +493,6 @@ test('can handle non-utf8 files', function(t) {
 
 test('watch', function(t) {
 
-  t.test('errors on the initial build', function(t) {
-    var x = function(cb) {
-      cb('error');
-    };
-    var inPath = join(FIXTURES_DIR, '*.txt');
-    var config = {
-      blog: {
-        $inPath: inPath,
-        $preProcess: [ x ]
-      }
-    };
-    tomasi(config).watch(function(err) {
-      t.equal(arguments.length, 1);
-      t.equal(err, 'error');
-      t.end();
-    });
-  });
-
   t.test('errors on a build triggered by a file change', function(t) {
     var x = function(cb, files) {
       if (files.length === 4) {
@@ -552,9 +534,9 @@ test('watch', function(t) {
       }
     };
     var newFile = join(FIXTURES_DIR, 'watch.txt');
-    tomasi(config).watch(function(err, dataTypes, event, path, watcher) {
+    tomasi(config).watch(function(err, dataTypes, watcher) {
       watcher.close();
-      t.equal(arguments.length, 5);
+      t.equal(arguments.length, 3);
       t.false(err);
       t.looseEquals(dataTypes.blog, [
         { $inPath: join(FIXTURES_DIR, '1-foo.txt'), $content: 'foo' },
@@ -562,7 +544,6 @@ test('watch', function(t) {
         { $inPath: join(FIXTURES_DIR, '3-baz.txt'), $content: 'baz' },
         { $inPath: newFile, $content: 'qux' }
       ]);
-      t.equal(event, 'added');
       fs.unlinkSync(newFile);
       t.false(fs.existsSync(newFile));
       t.end();

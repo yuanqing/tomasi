@@ -3,9 +3,12 @@
 var _ = require('savoy');
 var cheque = require('cheque');
 var clone = require('clone');
+var defaults = require('defaults');
+var ecstatic = require('ecstatic');
 var fs = require('fs');
 var gaze = require('gaze');
 var glob = require('glob');
+var http = require('http');
 var isRelative = require('is-relative');
 var isUtf8 = require('is-utf8');
 var noop = function() {};
@@ -232,37 +235,40 @@ var tomasi = function(config) {
   };
 
   var watch = function(cb, opts) {
-    opts = opts || {};
-    opts.onBuildStart = opts.onBuildStart || noop;
-    opts.onBuildEnd = opts.onBuildEnd || noop;
-    opts.onChange = opts.onChange || noop;
-    // Build before watching.
-    opts.onBuildStart();
-    build(function(err, dataTypes) {
-      if (err) {
-        return cb(err);
-      }
-      opts.onBuildEnd(err, dataTypes);
-      gaze(inPaths, function(err, watcher) {
-        watcher.on('all', function(event, path) {
-          opts.onChange(event, path);
-          opts.onBuildStart();
-          build(function(err, dataTypes) {
-            if (err) {
-              watcher.close();
-              return cb(err);
-            }
-            opts.onBuildEnd(err, dataTypes);
-            cb(err, dataTypes, event, path, watcher);
-          });
+    opts = defaults(opts, {
+      onStart: noop,
+      onChange: noop
+    });
+    gaze(inPaths, function(err, watcher) {
+      opts.onStart();
+      watcher.on('all', function(event, path) {
+        opts.onChange(event, path);
+        build(function(err, dataTypes) {
+          if (err) {
+            watcher.close();
+            return cb(err);
+          }
+          cb(err, dataTypes, watcher);
+          opts.onStart();
         });
       });
     });
   };
 
+  var serve = function(cb, opts) {
+    opts = opts || {};
+    if (opts.port == null) {
+      return cb('need a port');
+    }
+    opts.root = config.$dirs.$outDir;
+    var server = http.createServer(ecstatic(opts)).listen(opts.port);
+    server.on('error', cb);
+  };
+
   return {
     build: build,
-    watch: watch
+    watch: watch,
+    serve: serve
   };
 
 };

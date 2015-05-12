@@ -18,10 +18,11 @@ var errCb = function(err) {
 };
 
 var opts = nopt({
+  build: Boolean,
+  serve: Number,
   watch: Boolean
 });
-var remain = opts.argv.remain;
-var config = remain[0] || 'tomasi.js';
+var config = opts.argv.remain[0] || 'tomasi.js';
 
 try {
   var t = tomasi(config);
@@ -29,28 +30,7 @@ try {
   return errCb(err);
 }
 
-if (opts.watch) {
-  var watchOpts = {
-    onBuildStart: function() {
-      log('Building...');
-    },
-    onBuildEnd: function(err) {
-      if (err) {
-        return errCb(err);
-      }
-      log('Done');
-      log('Watching...');
-    },
-    onChange: function(event) {
-      log('File ' + event);
-    },
-  };
-  t.watch(function(err) {
-    if (err) {
-      return errCb(err);
-    }
-  }, watchOpts);
-} else {
+var build = function() {
   t.build(function(err) {
     log('Building...');
     if (err) {
@@ -58,4 +38,48 @@ if (opts.watch) {
     }
     log('Done');
   });
+};
+
+var watch = function() {
+  var watchOpts = {
+    onStart: function() {
+      log('Watching...');
+    },
+    onChange: function(event) {
+      log('File ' + event);
+      log('Building...');
+    }
+  };
+  t.watch(function(err) {
+    if (err) {
+      return errCb(err);
+    }
+    log('Done');
+  }, watchOpts);
+};
+
+var serve = function() {
+  var serveOpts = {};
+  serveOpts.port = opts.serve !== 1 ? opts.serve : 8080;
+  log('Serving on port ' + serveOpts.port);
+  t.serve(function(err) {
+    if (err) {
+      return errCb(err);
+    }
+  }, serveOpts);
+};
+
+// If neither the `watch` nor `serve` options are specified, default to build.
+if (!opts.serve && !opts.watch) {
+  return build();
+}
+
+if (opts.build) {
+  build();
+}
+if (opts.serve) {
+  serve();
+}
+if (opts.watch) {
+  watch();
 }
