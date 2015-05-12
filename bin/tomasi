@@ -4,9 +4,7 @@
 
 var tomasi = require('..');
 
-var _ = require('savoy');
 var dateformat = require('dateformat');
-var gaze = require('gaze');
 var nopt = require('nopt');
 
 var log = function(msg) {
@@ -19,26 +17,11 @@ var errCb = function(err) {
   process.exit(1);
 };
 
-var noop = function() {};
-
-var build = function(t, cb) {
-  cb = cb || noop;
-  log('Building...');
-  t.build(function(err) {
-    if (err) return cb(err);
-    log('Done');
-    cb();
-  });
-};
-
 var opts = nopt({
   watch: Boolean
 });
 var remain = opts.argv.remain;
-var config = 'tomasi.js';
-if (remain && remain[0]) {
-  config = remain[0];
-}
+var config = remain[0] || 'tomasi.js';
 
 try {
   var t = tomasi(config);
@@ -46,24 +29,33 @@ try {
   return errCb(err);
 }
 
-build(t, function(err) {
-  if (err) return errCb(err);
-  if (opts.watch) {
-    var inPaths = _.fold(t.config, [], function(acc, dataTypes) {
-      acc.push(dataTypes.$in);
-      return acc;
-    });
-    gaze(inPaths, function(err, watcher) {
-      if (err) return errCb(err);
-      var watchMsg = 'Watching...';
-      log(watchMsg);
-      watcher.on('all', function(event) {
-        log('File ' + event);
-        build(t, function(err) {
-          if (err) return errCb(err);
-          log(watchMsg);
-        });
-      });
-    });
-  }
-});
+if (opts.watch) {
+  var watchOpts = {
+    onBuildStart: function() {
+      log('Building...');
+    },
+    onBuildEnd: function(err) {
+      if (err) {
+        return errCb(err);
+      }
+      log('Done');
+      log('Watching...');
+    },
+    onChange: function(event) {
+      log('File ' + event);
+    },
+  };
+  t.watch(function(err) {
+    if (err) {
+      return errCb(err);
+    }
+  }, watchOpts);
+} else {
+  t.build(function(err) {
+    log('Building...');
+    if (err) {
+      return errCb(err);
+    }
+    log('Done');
+  });
+}

@@ -4,9 +4,11 @@ var _ = require('savoy');
 var cheque = require('cheque');
 var clone = require('clone');
 var fs = require('fs');
+var gaze = require('gaze');
 var glob = require('glob');
 var isRelative = require('is-relative');
 var isUtf8 = require('is-utf8');
+var noop = function() {};
 var path = require('path');
 var tomasiPlugins = require('tomasi-plugins');
 
@@ -211,15 +213,56 @@ var tomasi = function(config) {
     });
   };
 
-  return {
-    build: function(cb) {
-      _.waterfall([
-        read,
-        preProcess,
-        copy,
-        postProcess
-      ], cb);
+  var inPaths = _.fold(config.$dataTypes, [], function(acc, dataTypes) {
+    var inPath = dataTypes.$inPath;
+    if (isRelative(inPath)) {
+      inPath = path.join(config.$dirs.$inDir, inPath);
     }
+    acc.push(inPath);
+    return acc;
+  });
+
+  var build = function(cb) {
+    _.waterfall([
+      read,
+      preProcess,
+      copy,
+      postProcess
+    ], cb);
+  };
+
+  var watch = function(cb, opts) {
+    opts = opts || {};
+    opts.onBuildStart = opts.onBuildStart || noop;
+    opts.onBuildEnd = opts.onBuildEnd || noop;
+    opts.onChange = opts.onChange || noop;
+    // Build before watching.
+    opts.onBuildStart();
+    build(function(err, dataTypes) {
+      if (err) {
+        return cb(err);
+      }
+      opts.onBuildEnd(err, dataTypes);
+      gaze(inPaths, function(err, watcher) {
+        watcher.on('all', function(event, path) {
+          opts.onChange(event, path);
+          opts.onBuildStart();
+          build(function(err, dataTypes) {
+            if (err) {
+              watcher.close();
+              return cb(err);
+            }
+            opts.onBuildEnd(err, dataTypes);
+            cb(err, dataTypes, event, path, watcher);
+          });
+        });
+      });
+    });
+  };
+
+  return {
+    build: build,
+    watch: watch
   };
 
 };
