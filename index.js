@@ -256,12 +256,13 @@ var tomasi = function(config) {
   };
 
   var serve = function(cb, opts) {
-    opts = opts || {};
-    if (opts.port == null) {
-      return cb('need a port');
-    }
+    opts = defaults(opts, {
+      onStart: noop,
+      port: 8080
+    });
     opts.root = config.$dirs.$outDir;
     var server = http.createServer(ecstatic(opts)).listen(opts.port);
+    opts.onStart(opts.port);
     server.on('error', cb);
   };
 

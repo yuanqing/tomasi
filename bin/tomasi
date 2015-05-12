@@ -3,8 +3,8 @@
 'use strict';
 
 var tomasi = require('..');
-
 var dateformat = require('dateformat');
+var isInteger = require('cheque').isInteger;
 var nopt = require('nopt');
 
 var log = function(msg) {
@@ -17,11 +17,17 @@ var errCb = function(err) {
   process.exit(1);
 };
 
-var opts = nopt({
+var knownOpts = {
   build: Boolean,
-  serve: Number,
+  serve: [Boolean, Number],
   watch: Boolean
-});
+};
+var shortHands = {
+  b: '--build',
+  s: '--serve',
+  w: '--watch'
+};
+var opts = nopt(knownOpts, shortHands);
 var config = opts.argv.remain[0] || 'tomasi.js';
 
 try {
@@ -59,9 +65,14 @@ var watch = function() {
 };
 
 var serve = function() {
-  var serveOpts = {};
-  serveOpts.port = opts.serve !== 1 ? opts.serve : 8080;
-  log('Serving on port ' + serveOpts.port);
+  var serveOpts = {
+    onStart: function(port) {
+      log('Serving on port ' + port);
+    }
+  };
+  if (isInteger(opts.serve)) {
+    serveOpts.port = opts.serve;
+  }
   t.serve(function(err) {
     if (err) {
       return errCb(err);
