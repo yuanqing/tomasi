@@ -11,25 +11,6 @@ var RELATIVE_PATH = path.relative(process.cwd(), __dirname);
 var FIXTURES_DIR = join(RELATIVE_PATH, 'fixtures');
 var FIXTURES_ABS_DIR = join(__dirname, 'fixtures');
 
-test('is a function', function(t) {
-  t.equal(typeof tomasi, 'function');
-  t.end();
-});
-
-test('throws if no `config`', function(t) {
-  t.throws(function() {
-    tomasi();
-  });
-  t.end();
-});
-
-test('throws if `config` is not a string, function, or object', function(t) {
-  t.throws(function() {
-    tomasi([]);
-  });
-  t.end();
-});
-
 test('without `$preProcess` or `$views` pipelines', function(t) {
   var inPath = join(FIXTURES_DIR, '*.txt');
   var config = {
@@ -489,70 +470,4 @@ test('can handle non-utf8 files', function(t) {
     t.looseEquals(calls, [ 1, 2 ]);
     t.end();
   });
-});
-
-test('watch', function(t) {
-
-  t.test('errors on a build triggered by a file change', function(t) {
-    var x = function(cb, files) {
-      if (files.length === 4) {
-        return cb('error');
-      }
-      cb();
-    };
-    var inPath = join(FIXTURES_DIR, '*.txt');
-    var config = {
-      $dataTypes: {
-        blog: {
-          $inPath: inPath,
-          $preProcess: [ x ]
-        }
-      }
-    };
-    var newFile = join(FIXTURES_DIR, 'watch.txt');
-    tomasi(config).watch(function(err) {
-      t.equal(arguments.length, 1);
-      t.equal(err, 'error');
-      fs.unlinkSync(newFile);
-      t.false(fs.existsSync(newFile));
-      t.end();
-    });
-    setTimeout(function() {
-      t.false(fs.existsSync(newFile));
-      fs.writeFileSync(newFile, 'qux');
-      t.true(fs.existsSync(newFile));
-    }, 125);
-  });
-
-  t.test('no errors', function(t) {
-    var inPath = join(FIXTURES_DIR, '*.txt');
-    var config = {
-      $dataTypes: {
-        blog: {
-          $inPath: inPath
-        }
-      }
-    };
-    var newFile = join(FIXTURES_DIR, 'watch.txt');
-    tomasi(config).watch(function(err, dataTypes, watcher) {
-      watcher.close();
-      t.equal(arguments.length, 3);
-      t.false(err);
-      t.looseEquals(dataTypes.blog, [
-        { $inPath: join(FIXTURES_DIR, '1-foo.txt'), $content: 'foo' },
-        { $inPath: join(FIXTURES_DIR, '2-bar.txt'), $content: 'bar' },
-        { $inPath: join(FIXTURES_DIR, '3-baz.txt'), $content: 'baz' },
-        { $inPath: newFile, $content: 'qux' }
-      ]);
-      fs.unlinkSync(newFile);
-      t.false(fs.existsSync(newFile));
-      t.end();
-    });
-    setTimeout(function() {
-      t.false(fs.existsSync(newFile));
-      fs.writeFileSync(newFile, 'qux');
-      t.true(fs.existsSync(newFile));
-    }, 125);
-  });
-
 });

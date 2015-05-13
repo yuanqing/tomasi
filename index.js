@@ -255,15 +255,18 @@ var tomasi = function(config) {
     });
   };
 
-  var serve = function(cb, opts) {
+  var serve = function(opts) {
+    if (!fs.existsSync(config.$dirs.$outDir)) {
+      throw new Error('output directory not found');
+    }
     opts = defaults(opts, {
       onStart: noop,
-      port: 8080
+      port: 8888
     });
     opts.root = config.$dirs.$outDir;
     var server = http.createServer(ecstatic(opts)).listen(opts.port);
     opts.onStart(opts.port);
-    server.on('error', cb);
+    return server;
   };
 
   return {

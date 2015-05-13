@@ -73,11 +73,10 @@ var serve = function() {
   if (isInteger(opts.serve)) {
     serveOpts.port = opts.serve;
   }
-  t.serve(function(err) {
-    if (err) {
-      return errCb(err);
-    }
-  }, serveOpts);
+  var server = t.serve(serveOpts);
+  server.on('error', function(err) {
+    return errCb(err);
+  });
 };
 
 // If neither the `watch` nor `serve` options are specified, default to build.

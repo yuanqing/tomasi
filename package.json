@@ -26,8 +26,10 @@
     "tomasi-plugins": "*"
   },
   "devDependencies": {
+    "fs-extra": "^0.18.3",
     "istanbul": "^0.3.5",
     "jshint": "^2.5.11",
+    "request": "^2.55.0",
     "tape": "^3.0.3"
   },
   "scripts": {
