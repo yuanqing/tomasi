@@ -5,7 +5,7 @@ var cheque = require('cheque');
 var clone = require('clone');
 var defaults = require('defaults');
 var ecstatic = require('ecstatic');
-var fs = require('fs');
+var fs = require('fs-extra');
 var gaze = require('gaze');
 var glob = require('glob');
 var http = require('http');
@@ -44,11 +44,11 @@ var tomasi = function(config) {
       $dataTypes: config
     };
   }
-  config.$dirs = config.$dirs || {
+  config.$dirs = defaults(config.$dirs, {
     $inDir: '.',
     $outDir: 'out',
     $tmplDir: '.'
-  };
+  });
 
   // Pipe files through each plugin in `plugins`. This is called by the
   // `preProcess` and `postProcessIteration` functions.
@@ -225,8 +225,15 @@ var tomasi = function(config) {
     return acc;
   });
 
+  var clean = function(cb) {
+    fs.remove(config.$dirs.$outDir, function(err) {
+      cb(err);
+    });
+  };
+
   var build = function(cb) {
     _.waterfall([
+      clean,
       read,
       preProcess,
       copy,
@@ -270,6 +277,7 @@ var tomasi = function(config) {
   };
 
   return {
+    clean: clean,
     build: build,
     watch: watch,
     serve: serve
