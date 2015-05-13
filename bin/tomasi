@@ -5,6 +5,7 @@
 var tomasi = require('..');
 var dateformat = require('dateformat');
 var isInteger = require('cheque').isInteger;
+var noop = function() {};
 var nopt = require('nopt');
 
 var log = function(msg) {
@@ -18,12 +19,10 @@ var errCb = function(err) {
 };
 
 var knownOpts = {
-  build: Boolean,
   serve: [Boolean, Number],
   watch: Boolean
 };
 var shortHands = {
-  b: '--build',
   s: '--serve',
   w: '--watch'
 };
@@ -36,13 +35,15 @@ try {
   return errCb(err);
 }
 
-var build = function() {
+var build = function(cb) {
+  cb = cb || noop;
   t.build(function(err) {
     log('Building...');
     if (err) {
       return errCb(err);
     }
     log('Done');
+    cb();
   });
 };
 
@@ -79,17 +80,11 @@ var serve = function() {
   });
 };
 
-// If neither the `watch` nor `serve` options are specified, default to build.
-if (!opts.serve && !opts.watch) {
-  return build();
-}
-
-if (opts.build) {
-  build();
-}
-if (opts.serve) {
-  serve();
-}
-if (opts.watch) {
-  watch();
-}
+build(function() {
+  if (opts.serve) {
+    serve();
+  }
+  if (opts.watch) {
+    watch();
+  }
+});
