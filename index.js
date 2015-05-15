@@ -17,7 +17,7 @@ var tomasiPlugins = require('tomasi-plugins');
 
 var tomasi = function(config) {
 
-  if (config == null) {
+  if (cheque.isUndefined(config)) {
     throw new Error('missing config');
   }
 
